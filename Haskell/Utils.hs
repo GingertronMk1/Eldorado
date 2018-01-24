@@ -231,53 +231,51 @@ test2 = [("Frank", 29),("Steve/Reg", 2),("Arthur", 1),("Arthur", 23),("Steve/Reg
 
 numOfEach n = let bigNums = [1..1000] in (putStr . flatten) [show (td2,td,fg) ++ "\n" | td2<-bigNums, td<-bigNums, fg<-bigNums, ((8*td2)+(7*td)+(3*fg))==n]
 
+dartBoard :: [Int]
 dartBoard = let oneTwenty = [0..20] in rmDups (oneTwenty ++ map (*2) oneTwenty ++ map (*3) oneTwenty ++ [25,50])
 
-dartsScore n = putStrLn (show n ++ ": " ++ let scoreList = [show (d1,d2,d3) | d1 <- dartBoard, d2 <- dartBoard, d3 <- [2,4..40] ++ [50], (d1+d2+d3) == n]
-                                           in if null scoreList then "you fucked it" else head scoreList)
+--dartsScore n = let sn = show n 
+--               in sn ++ "\n" ++ replicate (length sn) '-' ++ "\n" ++ 
+--                  let scoreList = ["1: " ++ show d1 ++ "\n2: " ++ show d2 ++ "\n3: " ++ (if d3 == 50 then show 50 else "double " ++ show (quot d3 2))  | d1 <- dartBoard, d2 <- dartBoard, d3 <- [2,4..40] ++ [50], (d1+d2+d3) == n]
+--                  in if null scoreList then "you fucked it" else head scoreList
+
+
+dartsScores' n = let sc = [(a,b,c) | a<-dartBoard, b<-dartBoard, c<-(50:[40,38..2]), a+b+c==n] 
+                     sn = show n
+                 in if null sc then sn ++ "\n" ++ replicate (length sn) '-' ++ "\nFucked it" 
+                               else let (a,b,c) = head sc
+                                    in sn ++ "\n" ++ replicate (length sn) '-' ++ "\n1:\t" ++ show a ++ "\n2:\t" ++ show b ++ "\n3:\t" ++ (if c == 50 then "Bull" else "double " ++ show (quot c 2))
+
+dartsScores = (putStrLn . flatten . intersperse "\n\n" . map dartsScores') [0..180]
 
 -- Added 2018-01-14 ------------------------------------------------------------
 
 voucher :: Int
 voucher = 600
 
-cdOptions' = [("Razorlight - Razorlight",100),
-              ("Fratellis - Costello Music",100),
-              ("Robbie Williams - Greatest Hits",100),
-              ("Lily Allen - It's Not Me It's You",100),
-              ("Phil Collins - Face Value",300),
-              ("Bryan Adams - The Best Of Me",300),
-              ("Gnarls Barkley - St Elsewhere",20),
-              ("Feeder - Echo Park",20),
-              ("Linda Ronstadt - Greatest Hits",100)]
-
-cdO = take 8 cdOptions'
-
---removeShorter' :: Eq a => [[(a, b)]] -> [[(a, b)]] -> [[(a, b)]]
---removeShorter' [] t     = t
---removeShorter' (a:as) t = if (or . map (null . ((map fst a)\\))) (map (map fst) t)
---                          then removeShorter' as t
---                          else removeShorter' as (a:t)
+cds = [("Robbie Williams - Greatest Hits",100),
+       ("Lily Allen - It's Not Me It's You",100),
+       ("Phil Collins - Face Value",300),
+       ("Bryan Adams - The Best Of Me",300),
+       ("Gnarls Barkley - St Elsewhere",20),
+       ("Feeder - Echo Park",20),
+       ("Linda Ronstadt - Greatest Hits",100)]
 
 removeShorter' :: Eq b => (a -> b) -> [[a]] -> [[a]] -> [[a]]
 removeShorter' f t []     = t
-removeShorter' f t (a:as) = if (or . map (null . ((map f a)\\))) (map (map f) t)
+removeShorter' f t (a:as) = if (or . map (null . ((map f a)\\) . map f)) t
                             then removeShorter' f as t
                             else removeShorter' f as (a:t)
 
 removeShorter :: Eq b => (a -> b) -> [[a]] -> [[a]]
 removeShorter f as = removeShorter' f (removeShorter' f as []) []
 
-stringAndTotal :: [(String, Int)] -> String
-stringAndTotal sts = let total = (penniesToPounds . show . sum . map snd) sts
-                     in ((\s -> total ++ "\n" ++ replicate (length total) '-' ++ s) . flatten . map (("\n  - "++) . fst)) sts
+cdO :: [[(String, Int)]]
+cdO = (sortBy (comparing length) . removeShorter (fst) . rmDups . filter ((<=voucher) . sum . map snd)) [(sort . take n) l | l <- permutations cds, n <- [1..(length cds)]]
 
-penniesToPounds :: String -> String
-penniesToPounds n = "£" ++ take lnm2 n ++ "." ++ drop lnm2 n
-                  where lnm2 = (length n - 2)
+ppCDO = (putStrLn . flatten . intersperse "\n" . map (\ts -> ((show . sum . map snd) ts ++ "p:\t" ++ (flatten . intersperse ", " . map fst) ts))) cdO
 
-cdOptPerm :: [[(String, Int)]]
-cdOptPerm = (sortBy (comparing (length . map fst)) . removeShorter (fst) . rmDups . filter ((<voucher) . sum . map snd)) 
-            [(sort . take n) l | l <- permutations cdOptions', n <- [1..(length cdOptions')]]
+-- Added 2018-01-24 -----------------------------------------------------------
 
-ppCDO = (putStrLn . flatten . intersperse "\n\n" . map stringAndTotal) cdOptPerm
+elems :: Eq a => [a] -> [a] -> Bool
+elems as = null . (as\\)
