@@ -280,26 +280,29 @@ elems as = null . (as\\)
 -- Added 2018-02-17 ------------------------------------------------------------
 
 seasonShows :: [(String, [Int])]
-seasonShows = []
+seasonShows = [("Macbeth",[5,4,6]),
+               ("Hamlet",[2,1]),
+               ("Errors",[2,3,4,6,7]),
+               ("AYLI",[7,1]),
+               ("Lion King",[2,1,3]),
+               ("Runnings",[4,3,5]),
+               ("Mad Max",[7,6,5,4,2]),
+               ("Miss Saigon", [8])]
 
 ppShow :: Show a => [a] -> IO ()
 ppShow = putStrLn . flatten . intersperse "\n" . map show
 
-seasonLength = 9
-
 seasonGen :: [(String, [Int])] -> [[(String, Int)]]
-seasonGen = map (take seasonLength)
-            . filter (not . dupFst)
+seasonGen = filter (not . duplicates . map fst)
             . sequence
             . groupBy (\(_,as) (_,bs) -> as==bs)
             . sortBy (comparing snd)
             . flatten
             . map (\(a,bs) -> [(a,b) | b<-bs])
 
-dupFst' :: Eq a => [(a, b)] -> [a] -> Bool
-dupFst' ((a, bs):abss) as = if elem a as then True else dupFst' abss (a:as)
-dupFst' [] _              = False
-dupFst :: Eq a => [(a, b)] -> Bool
-dupFst abss               = dupFst' abss []
+duplicates :: Eq a => [a] -> Bool
+duplicates (a:as) = if elem a as then True else duplicates as
+duplicates []     = False
 
+seasons :: IO ()
 seasons = (putStrLn . flatten . intersperse "\n" . map show . seasonGen) seasonShows
