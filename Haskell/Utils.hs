@@ -226,9 +226,6 @@ accumulate = map (\ss -> ((fst . head) ss, (sum . map snd) ss))
 props :: [(String, Int)] -> [(String, Int)]
 props ts = map (\(s, i) -> (s, quot (i*100) ((sum . map snd) ts))) ts
 
-test2 :: [(String, Int)]
-test2 = [("Frank", 29),("Steve/Reg", 2),("Arthur", 1),("Arthur", 23),("Steve/Reg", 23),("Arthur", 22),("Steve/Reg", 26),("Arthur", 24),("Steve/Reg", 25),("Arthur", 5),("Steve/Reg", 5),("Hazel", 7),("Frank", 5),("Phil", 7),("Tony", 8),("Phil", 15),("Frank", 13),("Tony", 14),("Steve/Reg", 4),("Steve/Reg", 14),("Phil", 8),("Tony", 9),("Frank", 12),("Phil", 9),("Steve/Reg", 7),("Tony", 8),("Frank", 8),("Hazel", 13),("Phil", 8),("Steve/Reg", 8),("Tony", 3),("Frank", 3),("Arthur", 3),("Tony", 3),("Arthur", 19),("Frank", 6),("Phil", 5),("Steve/Reg", 6),("Arthur", 22),("Tony", 23),("Tony", 5),("Arthur", 15),("Steve/Reg", 19),("Arthur", 2),("Hazel", 11),("Phil", 14),("Frank", 10),("Phil", 25),("Frank", 16),("Arthur", 1),("Frank", 2),("Phil", 2),("Hazel", 21),("Arthur", 17),("Arthur", 12),("Hazel", 17),("Steve/Reg", 3),("Phil", 24),("Frank", 17),("Arthur", 9),("Steve/Reg", 9),("Frank", 7),("Tony", 12),("Phil", 10),("Steve/Reg", 17),("Arthur", 4),("Steve/Reg", 8),("Arthur", 14),("Phil", 7),("Tony", 7),("Frank", 9),("Tony", 5),("Steve/Reg", 9),("Phil", 13),("Frank", 10),("Arthur", 8),("Frank", 6),("Arthur", 15),("Phil", 9),("Steve/Reg", 10),("Tony", 3),("Hazel", 17),("Tony", 4),("Frank", 3),("Phil", 5),("Arthur", 5),("Arthur", 10),("Phil", 5),("Tony", 2),("Frank", 1),("Steve/Reg", 8),("Hazel", 10),("Tony", 1),("Frank", 1),("Hazel", 15),("Steve/Reg", 3),("Tony", 3),("Arthur", 4),("Phil", 2),("Frank", 5),("Hazel", 13),("Phil", 10),("Tony", 6),("Steve/Reg", 5),("Hazel", 2),("Arthur", 15),("Steve/Reg", 7),("Frank", 8),("Tony", 7),("Phil", 6),("Frank", 2),("Arthur", 21),("Hazel", 19),("Arthur", 14),("Hazel", 17),("Phil", 3),("Tony", 1),("Steve/Reg", 1),("Frank", 1),("Phil", 14),("Arthur", 8),("Tony", 5),("Steve/Reg", 6),("Hazel", 2),("Steve/Reg", 6),("Phil", 12),("Arthur", 9),("Tony", 8),("Frank", 12),("Phil", 17),("Tony", 13),("Hazel", 2),("Hazel", 17),("Frank", 22),("Hazel", 4),("Arthur", 3),("Phil", 31),("Arthur", 14),("Tony", 12),("Frank", 12),("Steve/Reg", 10),("Frank", 6),("Tony", 8),("Steve/Reg", 8),("Arthur", 11),("Phil", 8),("Steve/Reg", 7),("Frank", 7),("Hazel", 4),("Phil", 7),("Tony", 5),("Tony", 7),("Frank", 4),("Phil", 7),("Arthur", 6),("Steve/Reg", 7),("Hazel", 5),("Phil", 9),("Steve/Reg", 6),("Tony", 10),("Hazel", 4),("Frank", 1),("Arthur", 2),("Phil", 7),("Steve/Reg", 5),("Tony", 4),("Frank", 6),("Arthur", 2),("Hazel", 3),("Phil", 4),("Steve/Reg", 4),("Tony", 3),("Frank", 1),("Arthur", 6),("Hazel", 7),("Steve/Reg", 5),("Phil", 7),("Tony", 7),("Frank", 5),("Hazel", 1),("Arthur", 9),("Arthur", 10),("Frank", 6),("Phil", 5),("Steve/Reg", 4),("Tony", 3),("Hazel", 4),("Frank", 2),("Arthur", 4),("Phil", 3),("Tony", 3),("Hazel", 3),("Steve/Reg", 6),("Arthur", 6),("Frank", 4),("Phil", 6),("Steve/Reg", 7),("Tony", 5),("Hazel", 4),("Arthur", 9),("Frank", 5),("Tony", 7),("Phil", 4),("Steve/Reg", 3),("Hazel", 3),("Frank", 10),("Steve/Reg", 8),("Arthur", 10),("Tony", 4),("Phil", 7),("Hazel", 3)]
-
 numOfEach n = let bigNums = [1..1000] in (putStr . flatten) [show (td2,td,fg) ++ "\n" | td2<-bigNums, td<-bigNums, fg<-bigNums, ((8*td2)+(7*td)+(3*fg))==n]
 
 dartBoard :: [Int]
@@ -275,7 +272,34 @@ cdO = (sortBy (comparing length) . removeShorter (fst) . rmDups . filter ((<=vou
 
 ppCDO = (putStrLn . flatten . intersperse "\n" . map (\ts -> ((show . sum . map snd) ts ++ "p:\t" ++ (flatten . intersperse ", " . map fst) ts))) cdO
 
--- Added 2018-01-24 -----------------------------------------------------------
+-- Added 2018-01-24 ------------------------------------------------------------
 
 elems :: Eq a => [a] -> [a] -> Bool
 elems as = null . (as\\)
+
+-- Added 2018-02-17 ------------------------------------------------------------
+
+seasonShows :: [(String, [Int])]
+seasonShows = []
+
+ppShow :: Show a => [a] -> IO ()
+ppShow = putStrLn . flatten . intersperse "\n" . map show
+
+seasonLength = 9
+
+seasonGen :: [(String, [Int])] -> [[(String, Int)]]
+seasonGen = map (take seasonLength)
+            . filter (not . dupFst)
+            . sequence
+            . groupBy (\(_,as) (_,bs) -> as==bs)
+            . sortBy (comparing snd)
+            . flatten
+            . map (\(a,bs) -> [(a,b) | b<-bs])
+
+dupFst' :: Eq a => [(a, b)] -> [a] -> Bool
+dupFst' ((a, bs):abss) as = if elem a as then True else dupFst' abss (a:as)
+dupFst' [] _              = False
+dupFst :: Eq a => [(a, b)] -> Bool
+dupFst abss               = dupFst' abss []
+
+seasons = (putStrLn . flatten . intersperse "\n" . map show . seasonGen) seasonShows
