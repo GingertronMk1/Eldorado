@@ -5,7 +5,6 @@ module Utils where
 
 import Data.List
 import Data.Char
-import System.Random
 import Data.Maybe
 import System.IO.Unsafe
 import Data.Ord
@@ -148,15 +147,6 @@ quickSort (x:xs) = smallerSorted ++ [x] ++ biggerSorted
                    where smallerSorted = quickSort (filter (<= x) xs)
                          biggerSorted  = quickSort (filter (> x) xs)
 
--- Randomized-pivot quick sort, for those edge cases where the first element is always the smallest
-randomSort :: Ord a => [a] -> [a]
-randomSort []   = []
-randomSort [x]  = [x]
-randomSort xs   = smallerSorted ++ biggerSorted
-                  where smallerSorted = randomSort [a | a <- xs, a <= pivot]
-                        biggerSorted  = randomSort [a | a <- xs, a > pivot]
-                        pivot = xs !! unsafePerformIO (randomRIO (0, (length xs)-1))
-
 -- Image Compression Techniques
 
 type Value = Int
@@ -280,17 +270,14 @@ elems as = null . (as\\)
 -- Added 2018-02-17 ------------------------------------------------------------
 
 seasonShows :: [(String, [Int])]
-seasonShows = [("Macbeth",[5,4,6]),
-               ("Hamlet",[2,1]),
-               ("Errors",[2,3,4,6,7]),
-               ("AYLI",[7,1]),
-               ("Lion King",[2,1,3]),
-               ("Runnings",[4,3,5]),
-               ("Mad Max",[7,6,5,4,2]),
-               ("Miss Saigon", [8])]
-
-ppShow :: Show a => [a] -> IO ()
-ppShow = putStrLn . flatten . intersperse "\n" . map show
+seasonShows = [("As You Like It",[1,2,3,4,5,6,7]),
+               ("Bouncers",[4,5,6,7]),
+               ("Dumb Waiter",[1,2,3]),
+               ("Errors",[3,5,7]),
+               ("Grounded",[1,6,7]),
+               ("Radiant",[4,3,2]),
+               ("Lights",[3,7,5]),
+               ("Desko",[2,4,6])]
 
 seasonGen :: [(String, [Int])] -> [[(String, Int)]]
 seasonGen = filter (not . duplicates . map fst)
@@ -301,8 +288,17 @@ seasonGen = filter (not . duplicates . map fst)
             . map (\(a,bs) -> [(a,b) | b<-bs])
 
 duplicates :: Eq a => [a] -> Bool
-duplicates (a:as) = if elem a as then True else duplicates as
 duplicates []     = False
+duplicates (a:as) = if elem a as then True else duplicates as
 
-seasons :: IO ()
-seasons = (putStrLn . flatten . intersperse "\n" . map show . seasonGen) seasonShows
+seasons' :: [(String, [Int])] -> IO ()
+seasons' a = let longestName = ((+4) . length . fst . last . sortBy (comparing (length . fst))) a
+                 latestShow = (last . rmDups . flatten . map snd) a
+                 headerRow = (flatten . intersperse "| ") [let n' = show n in n' ++ replicate ((longestName)-(length n')) ' ' | n <- (rmDups . flatten . map snd) a]
+                 ppShows = (flatten . intersperse "\n" . map (\ss -> (flatten . intersperse "| ") [n ++ replicate (longestName-(length n)) ' ' | n <- (map fst) ss]) . seasonGen) a
+             in (putStrLn (headerRow ++ "\n" ++ replicate (length headerRow) '-' ++ "\n" ++ ppShows))
+
+seasons :: IO()
+seasons = seasons' seasonShows
+
+
