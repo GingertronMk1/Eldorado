@@ -270,14 +270,16 @@ elems as = null . (as\\)
 -- Added 2018-02-17 ------------------------------------------------------------
 
 seasonShows :: [(String, [Int])]
-seasonShows = [("As You Like It",[1,2,3,4,5,6,7]),
-               ("Bouncers",[4,5,6,7]),
-               ("Dumb Waiter",[1,2,3]),
+seasonShows = [
+               ("As You Like It",[7,1,6,5,4,3]),
+               ("Bouncers",[4,7,6,5]),
+               ("Dumb Waiter",[1,7,3,2]),
                ("Errors",[3,5,7]),
-               ("Grounded",[1,6,7]),
+               ("Grounded",[6,7]),
                ("Radiant",[4,3,2]),
-               ("Lights",[3,7,5]),
-               ("Desko",[2,4,6])]
+               ("Lights",[5,7,3]),
+               ("Desko",[2,4,6])
+               ]
 
 seasonGen :: [(String, [Int])] -> [[(String, Int)]]
 seasonGen = filter (not . duplicates . map fst)
@@ -293,12 +295,11 @@ duplicates (a:as) = if elem a as then True else duplicates as
 
 seasons' :: [(String, [Int])] -> IO ()
 seasons' a = let longestName = ((+4) . length . fst . last . sortBy (comparing (length . fst))) a
-                 latestShow = (last . rmDups . flatten . map snd) a
-                 headerRow = (flatten . intersperse "| ") [let n' = show n in n' ++ replicate ((longestName)-(length n')) ' ' | n <- (rmDups . flatten . map snd) a]
-                 ppShows = (flatten . intersperse "\n" . map (\ss -> (flatten . intersperse "| ") [n ++ replicate (longestName-(length n)) ' ' | n <- (map fst) ss]) . seasonGen) a
-             in (putStrLn (headerRow ++ "\n" ++ replicate (length headerRow) '-' ++ "\n" ++ ppShows))
+                 addPipe = flatten . intersperse "| "
+                 padding x = replicate (longestName - (length x)) ' '
+                 headerRow = addPipe [let n' = show n in n' ++ padding n' | n<-(rmDups . flatten . map snd) a]
+                 ppShows = (flatten . intersperse "\n" . map (\ss -> addPipe [n ++ padding n | n<-(map fst) ss]) . seasonGen) a
+             in putStrLn (headerRow ++ "\n" ++ replicate (length headerRow) '-' ++ "\n" ++ ppShows)
 
-seasons :: IO()
+seasons :: IO ()
 seasons = seasons' seasonShows
-
-
