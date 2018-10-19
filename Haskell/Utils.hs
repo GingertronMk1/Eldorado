@@ -221,10 +221,6 @@ numOfEach n = let bigNums = [1..1000] in (putStr . flatten) [show (td2,td,fg) ++
 dartBoard :: [Int]
 dartBoard = let oneTwenty = [0..20] in rmDups (oneTwenty ++ map (*2) oneTwenty ++ map (*3) oneTwenty ++ [25,50])
 
---dartsScore n = let sn = show n 
---               in sn ++ "\n" ++ replicate (length sn) '-' ++ "\n" ++ 
---                  let scoreList = ["1: " ++ show d1 ++ "\n2: " ++ show d2 ++ "\n3: " ++ (if d3 == 50 then show 50 else "double " ++ show (quot d3 2))  | d1 <- dartBoard, d2 <- dartBoard, d3 <- [2,4..40] ++ [50], (d1+d2+d3) == n]
---                  in if null scoreList then "you fucked it" else head scoreList
 
 
 dartsScores' n = let sc = [(a,b,c) | a<-dartBoard, b<-dartBoard, c<-(50:[40,38..2]), a+b+c==n] 
@@ -267,19 +263,18 @@ ppCDO = (putStrLn . flatten . intersperse "\n" . map (\ts -> ((show . sum . map 
 elems :: Eq a => [a] -> [a] -> Bool
 elems as = null . (as\\)
 
--- Added 2018-02-17 ------------------------------------------------------------
+-- Added 2018-02-17, updated 2018-09-08 ----------------------------------------
 
 seasonShows :: [(String, [Int])]
 seasonShows = [
-               ("As You Like It",[7,1,6,5,4,3]),
-               ("Bouncers",[4,7,6,5]),
-               ("Dumb Waiter",[1,7,3,2]),
-               ("Errors",[3,5,7]),
-               ("Grounded",[6,7]),
-               ("Radiant",[4,3,2]),
-               ("Lights",[5,7,3]),
-               ("Desko",[2,4,6])
-               ]
+                ("Half-Formed Thing", [4,3,2,1,7]),
+                ("X",                 [5,3,2,1,6,7,4]),
+                ("Grant Meets Death", [6,7]),
+                ("Faustus",           [5,4]),
+                ("Breathing Holes",   [6,7]),
+                ("Yen",               [5,4]),
+                ("Leenane",           [6,5])
+              ]
 
 seasonGen :: [(String, [Int])] -> [[(String, Int)]]
 seasonGen = filter (not . duplicates . map fst)
@@ -294,12 +289,19 @@ duplicates []     = False
 duplicates (a:as) = if elem a as then True else duplicates as
 
 seasons' :: [(String, [Int])] -> IO ()
-seasons' a = let longestName = ((+4) . length . fst . last . sortBy (comparing (length . fst))) a
-                 addPipe = flatten . intersperse "| "
-                 padding x = replicate (longestName - (length x)) ' '
-                 headerRow = addPipe [let n' = show n in n' ++ padding n' | n<-(rmDups . flatten . map snd) a]
-                 ppShows = (flatten . intersperse "\n" . map (\ss -> addPipe [n ++ padding n | n<-(map fst) ss]) . seasonGen) a
-             in putStrLn (headerRow ++ "\n" ++ replicate (length headerRow) '-' ++ "\n" ++ ppShows)
+seasons' [] = putStrLn "No shows provided"
+seasons' a  = let longestName = ((+4) . length . last . sortBy (comparing length) . map fst) a
+                  addPipe     = flatten . intersperse "| "
+                  padding x   = replicate (longestName - (length x)) ' '
+                  headerRow   = addPipe [let n' = "Slot " ++ show n in n' ++ padding n' | n<-(rmDups . flatten . map snd) a]
+                  ppShows     = (flatten . intersperse "\n" . map (\ss -> addPipe [n ++ padding n | n<-(map fst) ss]) . seasonGen) a
+               in putStrLn (headerRow ++ "\n" ++ replicate (length headerRow) '-' ++ "\n" ++ ppShows)
 
 seasons :: IO ()
 seasons = seasons' seasonShows
+
+
+-- Added 2018-10-08
+
+subarrays (n:[]) = [[n]]
+subarrays (n:ns) = ((n:ns):subarrays ns)
