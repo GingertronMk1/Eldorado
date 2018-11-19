@@ -1,0 +1,5 @@
+A:£8;No offer
+B:£12;2 for £20
+C:£4;3 for £10
+D:£7;2 for the price of 1
+E:£5;3 for the price of 2
