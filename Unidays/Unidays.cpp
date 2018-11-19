@@ -1,6 +1,10 @@
 #include <iostream>
 #include <cstdio>
 #include <vector>
+#include <string>
+#include <fstream>
+#include "Unidays.hpp"
+
 using namespace std;
 
 /*  Price rules are defined by a string for each item class
@@ -10,13 +14,6 @@ using namespace std;
  *  - X for the price of Y
  *  Price rules are therefore given as a vector of strings
  */
-
-vector<string> priceRulesStrings {"A:£8;No offer"
-                                , "B:£12;2 for £20"
-                                , "C:£4;3 for £10"
-                                , "D:£7;2 for the price of 1"
-                                , "E:£5;3 for the price of 2"};
-
 
 vector<tuple<char, int>> countUniqueChars(string s) {
   vector<tuple<char, int>> u;                                       // Empty vector in which we'll store the new tuples
@@ -28,25 +25,6 @@ vector<tuple<char, int>> countUniqueChars(string s) {
   return u;                                                         // Return that
 }
 
-struct totalPrice {
-  float total;
-  float deliveryCharge;
-};
-
-class UnidaysDiscountChallenge {
-  private:
-    string basket;              // Each item in the basket will be represented by a `char` denoting what kind of item it is
-    vector<string> priceRules;  // A list of strings that determine the pricing rules
-    float priceRulesF(char kind, int amount); // A function that takes into account the price rules given to it, and applies it to a modified list of basket items
-  public:
-    // New constructor to provide the pricing rules on objet creation
-    UnidaysDiscountChallenge(vector<string> pRules) : priceRules(pRules) {};
-    void addToBasket(char bi);                // Adding a new item to the basket
-    void addToBasket(string kinds);           // We can use an overload to add multiple items to the basket if necessary
-    totalPrice calculateTotalPrice();         // Calculating the total price and returning it, via printing it broken down into items + delivery
-    void printBasket();                       // Printing the basket, somewhat prettily
-    void clearBasket();                       // Emptying the basket (uncommon in online shopping annoyingly)
-};
 
 void UnidaysDiscountChallenge::printBasket() {
   for (char b : basket) {
@@ -135,7 +113,19 @@ float UnidaysDiscountChallenge::priceRulesF(char kind, int amount) {
 }
 
 int main () {
-  UnidaysDiscountChallenge udc(priceRulesStrings);
+  vector<string> prs;
+  ifstream rulesFile("rules.txt");
+  string line;
+  if(rulesFile.is_open()) {
+    while(getline(rulesFile, line)) {
+      cout << line << endl;
+      prs.push_back(line);
+    }
+    rulesFile.close();
+  } else {
+    cout << "Error, could not open file" << endl;
+  }
+  UnidaysDiscountChallenge udc(prs);
   totalPrice t;
   vector<string> testing {"",
                           "A",
