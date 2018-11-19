@@ -12,6 +12,7 @@ For the pricing rules, and their being passed into the `UnidaysDiscountChallenge
     "D:£7;2 for the price of 1"
     "E:£5;3 for the price of 2"
 
-To run: download the C++ file, modify the price rules as you see fit, and compile with your favourite C++ compiler (I used G++ on a Mac).
+To run: download the C++ file, modify the price rules in the file `rules.txt` as you see fit, and compile with your favourite C++ compiler (I used G++ on a Mac).
+You will have to compile using C++11, which on g++ is adding the `-std=c++11` flag.
 
 If an item in the basket is not in the pricing rules, it will throw an error about it, and not return a value for the basket.
