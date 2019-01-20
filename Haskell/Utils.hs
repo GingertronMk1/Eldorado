@@ -6,15 +6,15 @@ module Utils where
 import Data.List
 import Data.Char
 import Data.Maybe
-import System.IO.Unsafe
 import Data.Ord
 
-flatten ass = [a | as <- ass, a <- as]
+flatten :: [[a]] -> [a]
+flatten = concat
 
 -- Starting with some Fibonacci stuff:
 
 fibs :: [Int]
-fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
+fibs = 0 : 1 : zipWith (+) fibs (tail fibs)
 
 fibsTo :: Int -> [Int]
 fibsTo n = takeWhile (<n) fibs
@@ -25,7 +25,7 @@ nFibs n = take n fibs
 -- Random Listing Stuff
 
 genList :: [Int]
-genList = concat $ reverse $ sequence $ replicate 2 [15,14..0]
+genList = (concat . reverse . sequence . replicate 2) [15,14..0]
 
 factorial :: Int -> Int
 factorial n | n < 2 = 1
@@ -34,10 +34,8 @@ factorial n | n < 2 = 1
 factorialAcca :: Int -> Int
 factorialAcca n | n < 2 = 1
                 | otherwise = factorialAcca' n 1
-
-factorialAcca' :: Int -> Int -> Int
-factorialAcca' 1 n = n
-factorialAcca' x y = factorialAcca' (x-1) (x*y)
+                where factorialAcca' 1 n = n
+                      factorialAcca' x y = factorialAcca' (x-1) (x*y)
 
 -- Factors
 
@@ -61,9 +59,8 @@ primeFactors n = case factors of [] -> [n]
 
 intToList :: Int -> [Int]
 intToList n = intToList' n []
-intToList' :: Int -> [Int] -> [Int]
-intToList' 0 xs = xs
-intToList' n xs = intToList' (div n 10) $ (mod n 10):xs
+              where intToList' 0 xs = xs
+                    intToList' n xs = intToList' (div n 10) ((mod n 10):xs)
 
 sumDigits :: Int -> Int
 sumDigits n = sum (intToList n)
@@ -75,10 +72,8 @@ sumsTo n = [x | x <- [0..10^12], sumDigits x == n]
 
 intSqrt :: Int -> Int
 intSqrt n = intSqrt' n 0
-
-intSqrt' :: Int -> Int -> Int
-intSqrt' n rt = if (rt*rt) < n then intSqrt' n (rt+1)
-                               else rt
+            where intSqrt' n rt = if (rt*rt) < n then intSqrt' n (rt+1)
+                                                 else rt
 
 -- Sorting Algorithms
 -- So many `Ord a` constraints
@@ -115,8 +110,8 @@ insertion (n:ns)  = myInsert n (insertion ns)
 -- Selection sort
 selection :: Ord a => [a] -> [a]
 selection xs = selection' xs []
-               where selection' as bs = case as of []     -> bs
-                                                   (c:cs) -> selection' cs (myInsert c bs)
+               where selection' [] bs = bs
+                     selection' (c:cs) bs = selection' cs (myInsert c bs)
 
 -- The actual insertion bit
 myInsert :: Ord a => a -> [a] -> [a]
@@ -159,11 +154,9 @@ testRun = [1,1,2,2,2,3,3,4]
 runlength :: [Value] -> [(Value, Length)]
 runlength [] = []
 runlength r@(x:xs) = runlength' r x 0
-
-runlength' :: [Value] -> Value -> Length -> [(Value, Length)]
-runlength' [] v l = [(v,l)]
-runlength' (a:as) v l = if a == v then runlength' as v (l+1)
-                                  else (v,l):(runlength' as a 1)
+                     where runlength' [] v l = [(v,l)]
+                           runlength' (a:as) v l = if a == v then runlength' as v (l+1)
+                                                             else (v,l):(runlength' as a 1)
 
 unrunlength :: [(Value, Length)] -> [Value]
 unrunlength [] = []
@@ -175,18 +168,14 @@ rltest = unrunlength . runlength
 
 dpcm :: [Int] -> [Int]
 dpcm ns = dpcm' ns 0
-
-dpcm' :: [Int] -> Int -> [Int]
-dpcm' [] _ = []
-dpcm' (n:ns) v = (n-v):(dpcm' ns n)
+          where dpcm' [] _ = []
+                dpcm' (n:ns) v = (n-v):(dpcm' ns n)
 
 undpcm :: [Int] -> [Int]
 undpcm ns = undpcm' ns 0
-
-undpcm' :: [Int] -> Int -> [Int]
-undpcm' [] _ = []
-undpcm' (n:ns) v = newN:(undpcm' ns newN)
-                   where newN = n + v
+            where undpcm' [] _ = []
+                  undpcm' (n:ns) v = let newN = n + v
+                                      in newN:(undpcm' ns newN)
 
 dpcmtest = undpcm . dpcm
 
@@ -195,8 +184,9 @@ dpcmtest = undpcm . dpcm
 rmDups :: (Eq a, Ord a) => [a] -> [a]
 rmDups = map head . group . sort
 
+sieve :: Int -> [Int]
 sieve n = sieve' [1..n]
-sieve' (x:xs) = if elem x xs then sieve' xs else xs
+          where sieve' (x:xs) = if elem x xs then sieve' xs else xs
 
 
 screenDims :: (Double, Double) -> Double -> (Double, Double)
@@ -223,9 +213,9 @@ dartBoard = let oneTwenty = [0..20] in rmDups (oneTwenty ++ map (*2) oneTwenty +
 
 
 
-dartsScores' n = let sc = [(a,b,c) | a<-dartBoard, b<-dartBoard, c<-(50:[40,38..2]), a+b+c==n] 
+dartsScores' n = let sc = [(a,b,c) | a<-dartBoard, b<-dartBoard, c<-(50:[40,38..2]), a+b+c==n]
                      sn = show n
-                 in if null sc then sn ++ "\n" ++ replicate (length sn) '-' ++ "\nFucked it" 
+                 in if null sc then sn ++ "\n" ++ replicate (length sn) '-' ++ "\nFucked it"
                                else let (a,b,c) = head sc
                                     in sn ++ "\n" ++ replicate (length sn) '-' ++ "\n1:\t" ++ show a ++ "\n2:\t" ++ show b ++ "\n3:\t" ++ (if c == 50 then "Bull" else "double " ++ show (quot c 2))
 
@@ -267,13 +257,6 @@ elems as = null . (as\\)
 
 seasonShows :: [(String, [Int])]
 seasonShows = [
-                ("Half-Formed Thing", [4,3,2,1,7]),
-                ("X",                 [5,3,2,1,6,7,4]),
-                ("Grant Meets Death", [6,7]),
-                ("Faustus",           [5,4]),
-                ("Breathing Holes",   [6,7]),
-                ("Yen",               [5,4]),
-                ("Leenane",           [6,5])
               ]
 
 seasonGen :: [(String, [Int])] -> [[(String, Int)]]
@@ -305,3 +288,152 @@ seasons = seasons' seasonShows
 
 subarrays (n:[]) = [[n]]
 subarrays (n:ns) = ((n:ns):subarrays ns)
+
+-- Added 2018-11-05
+
+fib' 0 = (0,0)
+fib' 1 = (1,0)
+fib' n = let (a,b) = fib' (n-1)
+         in (a+b, a)
+
+
+-- Added 2018--11-22
+
+data Player = Player {x :: Int,
+                      y :: Int,
+                      vel :: (Int, Int)} deriving Eq
+
+instance Show Player where
+  show p = let px = (show . x) p
+               py = (show . y) p
+               vx = (show . fst . vel) p
+               vy = (show . snd . vel) p
+            in "x: " ++ px ++ ", y: " ++ py ++ ", vx: " ++ vx ++ ", vy: " ++ vy
+
+testPlayer = Player 5 3 (-1, 2)
+testPlayer2 = Player 5 3 (-1, 2)
+
+playerUpdateX p = Player {x = x p + (fst . vel) p,
+                          y = y p,
+                          vel = vel p}
+
+playerUpdateY p = Player {x = x p,
+                          y = y p + (snd . vel) p,
+                          vel = vel p}
+
+playerUpdate = playerUpdateX . playerUpdateY
+
+-- Added 2019-01-15
+
+data Tree a = Leaf
+            | Node a (Tree a) (Tree a)
+            deriving (Show, Eq)
+
+ppTree :: (Show a) => Tree a -> IO()
+ppTree = putStr . showTree
+
+showTree :: (Show a) => Tree a -> String
+showTree = showTree' 0
+           where showTree' indent Leaf = ""
+                 showTree' indent (Node x l r) = replicate indent ' '
+                                                 ++ show x ++ "\n"
+                                                 ++ showTree' (indent+1) l
+                                                 ++ showTree' (indent+1) r
+
+limitTree :: Int -> Tree a -> Tree a
+limitTree 0 (Node x _ _) = Node x Leaf Leaf
+limitTree n (Node x l r) = Node x (limitTree (n-1) l) (limitTree (n-1) r)
+
+treeHeight :: Tree a -> Int
+treeHeight = treeHeight' 0
+             where treeHeight' n Leaf = (n-1)
+                   treeHeight' n (Node _ l r) = larger (treeHeight' (n+1) l) (treeHeight' (n+1) r)
+                   larger x y = if x >= y then x else y
+
+bst :: Tree Int
+bst = Node 8
+        (Node 4
+           (Node 2
+              (Node 1 Leaf Leaf)
+              (Node 3 Leaf Leaf))
+           (Node 6
+              (Node 5 Leaf Leaf)
+              (Node 7 Leaf Leaf)))
+        (Node 12
+           (Node 10
+              (Node 9 Leaf Leaf)
+              (Node 11 Leaf Leaf))
+           (Node 14
+              (Node 13 Leaf Leaf)
+              (Node 15 Leaf Leaf)))
+
+testTree :: Tree Int
+testTree = Node 1
+             (Node 2
+                (Node 4 Leaf Leaf)
+                (Node 5 Leaf Leaf))
+             (Node 3 Leaf Leaf)
+
+treeGen :: Int -> Tree Int
+treeGen l = let n = 1
+             in limitTree l $ treeGen' n
+            where treeGen' x = Node x (treeGen' (x+1)) (treeGen' (x+1))
+
+treeBFS :: Tree a -> [a]
+treeBFS = reverse . treeBFS' [] . (:[])
+          where treeBFS' ns [] = ns
+                treeBFS' ns (Leaf : q) = treeBFS' ns q
+                treeBFS' ns (Node x l r : q) = treeBFS' (x:ns) (q ++ [l] ++ [r])
+
+inOrder :: Tree a -> [a]
+inOrder Leaf = []
+inOrder (Node x l r) = inOrder l ++ [x] ++ inOrder r
+
+
+postOrder :: Tree a -> [a]
+postOrder Leaf = []
+postOrder (Node x l r) = postOrder l ++ postOrder r ++ [x]
+
+preOrder :: Tree a -> [a]
+preOrder Leaf = []
+preOrder (Node x l r) = [x] ++ preOrder l ++ preOrder r
+
+-- Added 2019-01-18
+
+type FIFO a = ([a],[a])
+
+emptyFIFO :: FIFO a
+emptyFIFO = ([],[])
+
+toFIFO :: [a] -> FIFO a
+toFIFO xs = let (f', r') = splitAt (div (length xs) 2) xs
+             in (f', reverse r')
+
+fromFIFO :: FIFO a -> [a]
+fromFIFO (fs, rs) = fs ++ reverse rs
+
+fFix :: FIFO a -> FIFO a
+fFix ([], rs) = let (r', f') = splitAt (div (length rs) 2) rs
+                 in (reverse f', r')
+fFix f@(_,_) = f
+
+
+fAdd :: a -> FIFO a -> FIFO a
+fAdd x (fs, rs) = (fs, x:rs)
+
+fDrop :: FIFO a -> FIFO a
+fDrop (f:[], rs) = fFix ([], rs)
+fDrop (f:fs, rs) = (fs, rs)
+
+fExtract :: FIFO a -> (a, FIFO a)
+fExtract f@([], rs) = fExtract $ fFix f
+fExtract (f:fs, rs) = (f, (fs, rs))
+
+fHead (f:[], rs) = fFix ([], rs)
+fHead (f:fs, rs) = (fs, rs)
+
+treeBFSFIFO :: Tree a -> [a]
+treeBFSFIFO = (reverse . treeBFSFIFO' [] . (\t -> fAdd t ([],[])))
+              where treeBFSFIFO' ns ([],[]) = ns
+                    treeBFSFIFO' ns q = case (fExtract q) of (Leaf, q')       -> treeBFSFIFO' ns q'
+                                                             (Node x l r, q') -> treeBFSFIFO' (x:ns) ((fAdd r . fAdd l) q')
