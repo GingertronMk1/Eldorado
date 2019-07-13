@@ -21,6 +21,7 @@ class ItemsController extends Controller
     public function store() {
         $validated = request()->validate([
             'name' => 'required',
+            'description' => ['required', 'min:4'],
             'unit_cost_price' => ['required', 'gte:0']
         ]);
 
@@ -41,6 +42,7 @@ class ItemsController extends Controller
 
         $validated = request()->validate([
             'name' => 'required',
+            'description' => ['required', 'min:4'],
             'unit_cost_price' => ['required', 'gte:0']
         ]);
 
