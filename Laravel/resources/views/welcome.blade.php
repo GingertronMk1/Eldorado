@@ -1,11 +1,8 @@
 @extends('layout')
 
 @section('content')
-<h1>Let's have a go then</h1>
+<h1>A basic inventory system using the Laravel framework</h1>
 
-<ul>
-    @foreach($tasks as $task)
-    <li>{{ $task }}</li>
-    @endforeach
-</ul>
+<a href="/inventory">Click here to access the inventory</a>
+
 @endsection
