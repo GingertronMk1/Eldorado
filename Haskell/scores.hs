@@ -22,11 +22,17 @@ rls n = [show try ++ " T, " ++ show con ++ " Con, " ++ show pen ++ " Pen, " ++ s
          ,dg  <-[0..n]
          ,((4*try)+(2*(con+pen))+dg)==n]
 
-intersperse a (n:[]) = [n]
+intersperse :: a -> [a] -> [a]
+intersperse _ []     = []
+intersperse _ (n:[]) = [n]
 intersperse a (n:ns) = n:a:(intersperse a ns)
 
-flatten ass = [a|as<-ass,a<-as]
+ppStrings :: [String] -> IO ()
+ppStrings = putStrLn . concat . intersperse "\n"
 
-nfl = putStrLn . flatten . intersperse "\n" . nfls
-ru = putStrLn . flatten . intersperse "\n" . rus
-rl = putStrLn . flatten . intersperse "\n" . rls
+nfl :: Int -> IO ()
+nfl = ppStrings . nfls
+ru :: Int -> IO ()
+ru = ppStrings . rus
+rl :: Int -> IO ()
+rl = ppStrings . rls

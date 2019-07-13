@@ -4,12 +4,8 @@ module Utils where
 -- HASKELL UTILITIES:
 
 import Data.List
-import Data.Char
-import Data.Maybe
 import Data.Ord
-
-flatten :: [[a]] -> [a]
-flatten = concat
+import Data.Time.Clock
 
 -- Starting with some Fibonacci stuff:
 
@@ -194,9 +190,6 @@ screenDims (x, y) d = (a , a*r)
                       where r = x/y
                             a = sqrt (d*d / (1 + r*r))
 
---test :: [(String, Int)]
---test = [("Frank", 13),("Arthur", 14),("Frank", 3)]
-
 times :: [(String, Int)] -> [(String, Int)]
 times = reverse . sortBy (comparing snd) . props . accumulate . groupBy (\x y -> fst x == fst y) . sortBy (comparing fst)
 
@@ -206,7 +199,7 @@ accumulate = map (\ss -> ((fst . head) ss, (sum . map snd) ss))
 props :: [(String, Int)] -> [(String, Int)]
 props ts = map (\(s, i) -> (s, quot (i*100) ((sum . map snd) ts))) ts
 
-numOfEach n = let bigNums = [1..1000] in (putStr . flatten) [show (td2,td,fg) ++ "\n" | td2<-bigNums, td<-bigNums, fg<-bigNums, ((8*td2)+(7*td)+(3*fg))==n]
+numOfEach n = let bigNums = [1..1000] in (putStr . concat) [show (td2,td,fg) ++ "\n" | td2<-bigNums, td<-bigNums, fg<-bigNums, ((8*td2)+(7*td)+(3*fg))==n]
 
 dartBoard :: [Int]
 dartBoard = let oneTwenty = [0..20] in rmDups (oneTwenty ++ map (*2) oneTwenty ++ map (*3) oneTwenty ++ [25,50])
@@ -219,7 +212,7 @@ dartsScores' n = let sc = [(a,b,c) | a<-dartBoard, b<-dartBoard, c<-(50:[40,38..
                                else let (a,b,c) = head sc
                                     in sn ++ "\n" ++ replicate (length sn) '-' ++ "\n1:\t" ++ show a ++ "\n2:\t" ++ show b ++ "\n3:\t" ++ (if c == 50 then "Bull" else "double " ++ show (quot c 2))
 
-dartsScores = (putStrLn . flatten . intersperse "\n\n" . map dartsScores') [0..180]
+dartsScores = (putStrLn . concat . intersperse "\n\n" . map dartsScores') [0..180]
 
 -- Added 2018-01-14 ------------------------------------------------------------
 
@@ -246,7 +239,7 @@ removeShorter f as = removeShorter' f (removeShorter' f as []) []
 cdO :: [[(String, Int)]]
 cdO = (sortBy (comparing length) . removeShorter (fst) . rmDups . filter ((<=voucher) . sum . map snd)) [(sort . take n) l | l <- permutations cds, n <- [1..(length cds)]]
 
-ppCDO = (putStrLn . flatten . intersperse "\n" . map (\ts -> ((show . sum . map snd) ts ++ "p:\t" ++ (flatten . intersperse ", " . map fst) ts))) cdO
+ppCDO = (putStrLn . concat . intersperse "\n" . map (\ts -> ((show . sum . map snd) ts ++ "p:\t" ++ (concat . intersperse ", " . map fst) ts))) cdO
 
 -- Added 2018-01-24 ------------------------------------------------------------
 
@@ -256,7 +249,15 @@ elems as = null . (as\\)
 -- Added 2018-02-17, updated 2018-09-08 ----------------------------------------
 
 seasonShows :: [(String, [Int])]
-seasonShows = [
+seasonShows = [("Truth",[1])
+              ,("Ceiling",[9,8,7,4,6,3,2,1,5])
+              ,("Animals",[6,5,4,7])
+              ,("Incognito",[9,6,7,5,8,4])
+              ,("Inhabitation",[5,6,4,7,3])
+              ,("Hens",[6,5,4,7])
+              ,("Seagull",[6,5,9])
+              ,("TIKTBT",[6,9,8])
+              ,("Laura",[8,7,9])
               ]
 
 seasonGen :: [(String, [Int])] -> [[(String, Int)]]
@@ -264,24 +265,28 @@ seasonGen = filter (not . duplicates . map fst)
             . sequence
             . groupBy (\(_,as) (_,bs) -> as==bs)
             . sortBy (comparing snd)
-            . flatten
+            . concat
             . map (\(a,bs) -> [(a,b) | b<-bs])
 
 duplicates :: Eq a => [a] -> Bool
 duplicates []     = False
 duplicates (a:as) = if elem a as then True else duplicates as
 
-seasons' :: [(String, [Int])] -> IO ()
+seasons' :: [[(String, Int)]] -> IO ()
 seasons' [] = putStrLn "No shows provided"
-seasons' a  = let longestName = ((+4) . length . last . sortBy (comparing length) . map fst) a
-                  addPipe     = flatten . intersperse "| "
+seasons' a  = let ca = concat a
+                  longestName = ((+1) . length . last . sortBy (comparing length) . map fst) ca
+                  addPipe     = concat . intersperse "| "
                   padding x   = replicate (longestName - (length x)) ' '
-                  headerRow   = addPipe [let n' = "Slot " ++ show n in n' ++ padding n' | n<-(rmDups . flatten . map snd) a]
-                  ppShows     = (flatten . intersperse "\n" . map (\ss -> addPipe [n ++ padding n | n<-(map fst) ss]) . seasonGen) a
+                  headerRow   = addPipe [let n' = "Slot " ++ show n in n' ++ padding n' | n<-(rmDups . map snd) ca]
+                  ppShows     = (concat . intersperse "\n" . map (\ss -> addPipe [n ++ padding n | n<-(map fst) ss])) a
                in putStrLn (headerRow ++ "\n" ++ replicate (length headerRow) '-' ++ "\n" ++ ppShows)
 
+count :: Ord a => [a] -> [(a, Int)]
+count = map (\l -> (head l, length l)) . group . sort
+
 seasons :: IO ()
-seasons = seasons' seasonShows
+seasons =  (seasons' . seasonGen) seasonShows
 
 
 -- Added 2018-10-08
@@ -345,7 +350,7 @@ limitTree 0 (Node x _ _) = Node x Leaf Leaf
 limitTree n (Node x l r) = Node x (limitTree (n-1) l) (limitTree (n-1) r)
 
 treeHeight :: Tree a -> Int
-treeHeight = treeHeight' 0
+treeHeight = treeHeight' 2
              where treeHeight' n Leaf = (n-1)
                    treeHeight' n (Node _ l r) = larger (treeHeight' (n+1) l) (treeHeight' (n+1) r)
                    larger x y = if x >= y then x else y
@@ -373,6 +378,18 @@ testTree = Node 1
                 (Node 4 Leaf Leaf)
                 (Node 5 Leaf Leaf))
              (Node 3 Leaf Leaf)
+
+{-
+bstGen :: Int -> Tree Int
+bstGen n = let h = (floor . log . fromIntegral) n
+            in limitTree (h+1) (bstGen' n)
+
+bstGen' :: Int -> Tree Int
+bstGen' n = let n2 = div n 2
+            in if n2 < n && n < (3*n2) then Node n (bstGen' (n-n2)) (bstGen' (n+n2))
+                                       else Node n Leaf Leaf
+-}
+
 
 treeGen :: Int -> Tree Int
 treeGen l = let n = 1
@@ -402,7 +419,7 @@ preOrder (Node x l r) = [x] ++ preOrder l ++ preOrder r
 
 type FIFO a = ([a],[a])
 
-emptyFIFO :: FIFO a
+emptyFIFO :: Eq a => FIFO a
 emptyFIFO = ([],[])
 
 toFIFO :: [a] -> FIFO a
@@ -417,7 +434,6 @@ fFix ([], rs) = let (r', f') = splitAt (div (length rs) 2) rs
                  in (reverse f', r')
 fFix f@(_,_) = f
 
-
 fAdd :: a -> FIFO a -> FIFO a
 fAdd x (fs, rs) = (fs, x:rs)
 
@@ -426,14 +442,81 @@ fDrop (f:[], rs) = fFix ([], rs)
 fDrop (f:fs, rs) = (fs, rs)
 
 fExtract :: FIFO a -> (a, FIFO a)
-fExtract f@([], rs) = fExtract $ fFix f
+fExtract f@([], rs) = fExtract (fFix f)
 fExtract (f:fs, rs) = (f, (fs, rs))
 
-fHead (f:[], rs) = fFix ([], rs)
-fHead (f:fs, rs) = (fs, rs)
+fHead :: FIFO a -> a
+fHead (f:_, _) = f
 
 treeBFSFIFO :: Tree a -> [a]
-treeBFSFIFO = (reverse . treeBFSFIFO' [] . (\t -> fAdd t ([],[])))
-              where treeBFSFIFO' ns ([],[]) = ns
-                    treeBFSFIFO' ns q = case (fExtract q) of (Leaf, q')       -> treeBFSFIFO' ns q'
-                                                             (Node x l r, q') -> treeBFSFIFO' (x:ns) ((fAdd r . fAdd l) q')
+treeBFSFIFO
+  = (reverse . treeBFSFIFO' [] . (\t -> fAdd t ([],[])))
+    where treeBFSFIFO' ns ([],[]) = ns
+          treeBFSFIFO' ns q = case (fExtract q) of (Leaf, q')       -> treeBFSFIFO' ns q'
+                                                   (Node x l r, q') -> treeBFSFIFO' (x:ns) ((fAdd r . fAdd l) q')
+
+bfsTest f n = (map length . group . f) (treeGen n)
+
+bstGen :: Int -> Tree Int
+bstGen n = let n' = 2 ^ n
+            in limitTree n $ bstGen' n n' (div n' 2)
+           where bstGen' h n d = let h' = h-1
+                                     d' = div d 2
+                                 in Node n (bstGen' h' (n-d) d') (bstGen' h' (n+d) d')
+
+makePairs :: [a] -> [(a,a)]
+makePairs l@(x:xs) = zip l (xs ++ [x])
+
+data S a = a `Fby` (S a) deriving (Eq, Show)
+
+instance Functor S where
+  fmap f (a `Fby` sa) = f a `Fby` (fmap f sa)
+
+instance Applicative S where
+  pure x = (x `Fby` pure x)
+  (<*>) (f `Fby` sf) (a `Fby` sa) = f a `Fby` (sf <*> sa)
+
+instance Num a => Num (S a) where
+  (+) s1 s2     = pure (+) <*> s1 <*> s2
+  (-) s1 s2     = pure (-) <*> s1 <*> s2
+  (*) s1 s2     = pure (*) <*> s1 <*> s2
+  abs sa        = pure abs <*> sa
+  fromInteger x = pure fromInteger <*> pure x
+  signum sa     = pure signum <*> sa
+
+nat :: S Int
+nat = 1 `Fby` (fmap (+1) nat)
+
+fib :: S Int
+fib = 1 `Fby` (1 `Fby` (sTail fib + fib))
+      where sTail (_ `Fby` sa) = sa
+
+sFilt :: (a -> Bool) -> S a -> S a
+sFilt f (a `Fby` sa) = if f a then a `Fby` (sFilt f sa)
+                              else sFilt f sa
+
+toList :: S a -> [a]
+toList (a `Fby` sa) = a : toList sa
+
+firstN :: Int -> S a -> [a]
+firstN n = take n . toList
+
+ton :: Double -> [String]
+ton n = let n3 = n/3
+         in ["Up: " ++ show (floor a) ++
+             " Along: " ++ show (floor b) ++
+             " Diag: " ++ show (floor c)
+             | a <- [n3,n3-1..1], b <- [a,a-1..a/2], let c = sqrt (a^2 + b^2), a + b + c > 0.8 * n && a + b + c < n]
+
+ppShow :: Show a => [a] -> IO()
+ppShow = putStrLn . concat . map ((\s -> s ++ "\n") . show)
+
+timeTest :: IO Integer
+timeTest = getCurrentTime >>= return . diffTimeToPicoseconds . utctDayTime
+
+woodTest :: IO ()
+woodTest = putStr . concat $ [show x ++ " flat bits " ++ show y ++ " long bits equals £" ++ show  n ++ "\n" | x <- [4.0..4.0], y <- [1.0..50.0], let n = (1.2 * ((19.85*x) + (2.55 * y)))]
+
+lanes = let l = 15
+            h = 3150
+            in takeWhile (<=h) . map (\n -> (n*h/l) - 100) $ [1,2..]

@@ -29,10 +29,10 @@ By default it should be 4 (clue's in the name really)
 > win = 4
 
 How many moves ahead the game tree should be generated
-By default it should be 5
+By default it should be 6
 
 > depth :: Int
-> depth = 5
+> depth = 6
 
 Players are denoted by their token type, Xs and Os
 
@@ -101,8 +101,9 @@ This is a bit tricky tbh
 >                       getDiags b = map (\(y,x) -> (b !! y) !! x) . diags b
 
 > diags :: Board -> Int -> [(Int, Int)]
-> diags b n = (filter (\(y,x) -> y < boardHeight b && x < boardWidth b) . take n . diags') (0,n-1)
->             where diags' (y,x) = (y,x) : diags' (y+1, x-1)
+> diags b n = (filter (\(y,x) -> y < boardHeight b && x < boardWidth b) . diags') (0,n-1)
+>             where diags' (y,0) = []
+>                   diags' (y,x) = (y,x) : diags' (y+1, x-1)
 
 --------------------------------------------------------------------------------
 WINNING-------------------------------------------------------------------------
@@ -227,32 +228,6 @@ MINMAX ALGORITHM----------------------------------------------------------------
 > bestMove t = head [Node (b',p') ts' | Node (b', p') ts' <- ts, p' == best]
 >              where Node (_, best) ts = minMax t
 
-> abMin t1@(i1, _) t2@(i2, _) = if i1 < i2 then t1 else t2
-> abMax t1@(i1, _) t2@(i2, _) = if i1 > i2 then t1 else t2
-
-> ab :: Tree Board -> Int -> Int -> Player -> Int
-> ab (Node b []) alpha beta p = case p of X -> 1
->                                         B -> 0
->                                         O -> -1
-> ab (Node b ts) alpha beta p = case p of X -> let v = -100000
->                                               in ab' v ts alpha beta O
->                                         O -> let v = 100000
->                                               in ab' v ts alpha beta X
-
-> ab' :: Int -> [Tree Board] -> Int -> Int -> Player -> Int
-> ab' v (t:[]) alpha beta p = case p of O -> max v (ab t alpha beta X)
->                                       X -> min v (ab t alpha beta O)
-> ab' v (t:ts) alpha beta p = case p of O -> let v' = max v (ab t alpha beta X)
->                                                alpha' = max alpha v'
->                                             in if alpha' < beta then ab' v' ts alpha' beta O
->                                                                 else v'
->                                       X -> let v' = min v (ab t alpha beta O)
->                                                beta' = min beta v'
->                                             in if beta' < alpha then ab' v' ts alpha beta' X
->                                                                 else v'
-
-> abTest = ab initTree (-1000) (1000) (whoseGo initBoard)
-
 --------------------------------------------------------------------------------
 IO THINGS LEADING UP TO PLAYING THE GAME----------------------------------------
 --------------------------------------------------------------------------------
@@ -300,9 +275,10 @@ IO THINGS LEADING UP TO PLAYING THE GAME----------------------------------------
 >                        let Node (b', p') ts' = bestMove (Node b ts)
 >                            t' = if p' /= B then head $ filter (\(Node x xs) -> x == b') ts
 >                                            else ts!!r
+>                            t'' = extendTree t'
 >                        if whoWon b' == p then do putStrLn $ "The computer playing " ++ show p ++ " wins"
 >                                                  showBoard b'
->                                          else eve (next p) (extendTree t')
+>                                          else eve (next p) t''
 
 --------------------------------------------------------------------------------
 FINALLY, MAIN-------------------------------------------------------------------
