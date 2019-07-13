@@ -7,15 +7,9 @@ use Illuminate\Http\Request;
 class PagesController extends Controller
 {
     public function home(){
-        return view('welcome')->withTasks([
-            "Get food",
-            "Get water"
-        ]);
-    }
-    public function about() {
-        return view('about');
+        return view('welcome');
     }
     public function contact(){
-        return view('contact');
+      return view('contact');
     }
 }
