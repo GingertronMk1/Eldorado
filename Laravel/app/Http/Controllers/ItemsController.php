@@ -26,11 +26,12 @@ class ItemsController extends Controller
     }
 
     public function store() {
-        request()->validate([
+        $validated = request()->validate([
             'name' => 'required',
             'unit_cost_price' => ['required', 'gte:0']
         ]);
-        Item::create(request(['name', 'description', 'unit_cost_price']));
+
+        Item::create($validated);
 
         return redirect('/inventory');
     }
@@ -45,11 +46,12 @@ class ItemsController extends Controller
 
     public function update(Item $inventory){
 
-        request()->validate([
+        $validated = request()->validate([
             'name' => 'required',
             'unit_cost_price' => ['required', 'gte:0']
         ]);
-        $inventory->update(request(['name', 'description', 'unit_cost_price']));
+        
+        $inventory->update($validated);
 
         return redirect('/inventory');
 
