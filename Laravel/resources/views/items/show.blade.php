@@ -4,9 +4,18 @@
 
 @section('content')
 <ul>
-    <li>{{ $inventory->name }}</li>
-    <li>{{ $inventory->description }}</li>
-    <li>{{ $inventory->unit_cost_price }}</li>
-    <li><a href="/inventory/{{ $inventory->id }}/edit">Edit this item</a></li>
+    <li>
+      <h2>Name:</h2>
+      {{ $inventory->name }}
+    </li>
+    <li>
+      <h2>Description:</h2>
+      {{ $inventory->description }}
+    </li>
+    <li>
+      <h2>Unit Cost Price:</h2>
+      {{ $inventory->unit_cost_price }}
+    </li>
     </ul>
+    <a href="/inventory/{{ $inventory->id }}/edit">Edit this item</a></li>
 @endsection
