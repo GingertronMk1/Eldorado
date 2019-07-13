@@ -7,7 +7,6 @@
       <change beforePath="$PROJECT_DIR$/../Haskell/connect4.lhs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../Haskell/nameGen.hs" beforeDir="false" afterPath="$PROJECT_DIR$/../Haskell/nameGen.hs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Haskell/scores.hs" beforeDir="false" afterPath="$PROJECT_DIR$/../Haskell/scores.hs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/ItemsController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/ItemsController.php" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -271,9 +270,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" fullScreen="true">
-    <option name="x" value="1280" />
-    <option name="width" value="1920" />
-    <option name="height" value="1200" />
+    <option name="width" value="1280" />
+    <option name="height" value="800" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="1" id="Add" />
@@ -401,18 +399,17 @@
       <option name="presentableId" value="Default" />
       <updated>1562971554674</updated>
       <workItem from="1562971555824" duration="1382000" />
-      <workItem from="1562973221224" duration="13611000" />
+      <workItem from="1562973221224" duration="13858000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="14993000" />
+    <option name="totallyTimeSpent" value="15240000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1280" y="0" width="1920" height="1200" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="0" width="1280" height="800" extended-state="0" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49863014" visible="true" weight="0.14643237" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49863014" visible="true" weight="0.22213247" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" sideWeight="0.50136983" side_tool="true" weight="0.22213247" />
       <window_info anchor="bottom" id="Message" order="0" />
