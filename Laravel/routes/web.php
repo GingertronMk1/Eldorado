@@ -11,18 +11,7 @@
 |
 */
 
-/*
-    GET     /inventory          index
-    GET     /inventory/create   create
-    POST    /inventory          store
-    GET     /inventory/id       show
-    GET     /inventory/id/edit  edit
-    PATCH   /inventory/id       update
-    DELETE  /inventory/id       destroy
-*/
-
 
 Route::get('/', 'PagesController@home');
-Route::get('/contact', 'PagesController@contact');
 
 Route::resource('/inventory', 'ItemsController');
