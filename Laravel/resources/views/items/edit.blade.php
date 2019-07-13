@@ -4,38 +4,42 @@
 
 @section('content')
     <h1>Edit Content</h1>
-    <form method="POST" action="/inventory/{{ $inventory->id }}">
-        @method('PATCH')
-        @csrf
+    <div class="form-group">
+        <form method="POST" action="/inventory/{{ $inventory->id }}">
+            @method('PATCH')
+            @csrf
 
+            <label for="name">Item Name</label>
+            <br>
+            <input type="text" class="form-control form-control-lg" name="name" placeholder="Item Name" value="{{ $inventory->name }}" required>
+            <br>
+            <label for="description">Description</label>
+            <br>
+            <textarea class="form-control" name="description">{{ $inventory->description }}</textarea>
+            <br>
+            <label for="unit_cost_price">Unit Cost Price</label>
+            <br>
+            <input type="number" class="form-control" name="unit_cost_price" step="0.01" value="{{ $inventory->unit_cost_price }}">
+            <br>
+            <button type="submit" class="btn btn-primary">Update Item</button>
+        </form>
+        <br>
 
-        <label for="Name">Item Name</label>
-        <br>
-        <input type="text" class="input" name="name" placeholder="Item Name" value="{{ $inventory->name }}" required>
-        <br>
-        <label for="description">Description</label>
-        <br>
-        <textarea name="description">{{ $inventory->description }}</textarea>
-        <br>
-        <label for="unit_cost_price">Unit Cost Price</label>
-        <br>
-        <input type="number" name="unit_cost_price" step="0.01" value="{{ $inventory->unit_cost_price }}">
-        <br>
-        <button type="submit">Update Item</button>
-    </form>
-
-    <form method="POST" action="/inventory/{{ $inventory->id }}">
-        @method('DELETE')
-        @csrf
-        <button type="submit">Delete item</button>
-    </form>
+        <form method="POST" action="/inventory/{{ $inventory->id }}">
+            @method('DELETE')
+            @csrf
+            <button type="submit" class="btn btn-danger">Delete item</button>
+        </form>
+    </div>
 
     @if($errors->any())
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+        <div class="bg-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
-    @endsection
+@endsection
