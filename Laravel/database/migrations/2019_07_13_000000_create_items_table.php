@@ -18,6 +18,7 @@ class CreateItemsTable extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->float('unit_cost_price');
+            $table->timestamps();
         });
     }
 

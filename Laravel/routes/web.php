@@ -11,6 +11,14 @@
 |
 */
 
-Route::get('/', 'PagesController@home');
-Route::get('/about', 'PagesController@about');
-Route::get('/contact', 'PagesController@contact');
+/*
+    GET     /inventory          index
+    GET     /inventory/create   create
+    POST    /inventory          store
+    GET     /inventory/id       show
+    GET     /inventory/id/edit  edit
+    PATCH   /inventory/id       update
+    DELETE  /inventory/id       destroy
+*/
+
+Route::resource('/inventory', 'ItemsController');
