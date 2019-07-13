@@ -3,20 +3,22 @@
 @section('title', 'Index')
 
 @section('content')
-<h1>Items In The Inventory</h1>
+    <h1 style="text-align: center">Items In The Inventory</h1>
 
-@if($items->isEmpty())
-  The database is currently empty.
-  Use the link above to add some data to it.
-@else
-<ul>
-    @foreach($items as $item)
-        <li>
-            <a href="inventory/{{ $item->id }}">
-                {{ $item->name }}
-            </a>
-        </li>
-    @endforeach
-</ul>
-@endif
+    <div style="padding-left: 1%">
+        @if($items->isEmpty())
+            The database is currently empty.
+            Use the link above to add some data to it.
+        @else
+            <ul>
+                @foreach($items as $item)
+                    <li>
+                        <a href="inventory/{{ $item->id }}">
+                            {{ $item->name }}
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </div>
 @endsection

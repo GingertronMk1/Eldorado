@@ -17,15 +17,17 @@
     <title>@yield('title', 'Inventory Management')</title>
 </head>
 <body>
-    <div>
-        <ul>
-            <li><a href="/inventory">View all items</a></li>
-            <li><a href="/inventory/create">Create new item</a></li>
-            <li><a href="/">Go home</a></li>
-        </ul>
+<div class="align-content-center" style="height: 5%">
+    <div style="text-align: center">
+        <a href="/inventory">View all items</a>
+        |
+        <a href="/inventory/create">Create new item</a>
+        |
+        <a href="/">Go home</a>
     </div>
     <div class="container">
         @yield('content')
     </div>
+</div>
 </body>
 </html>

@@ -3,7 +3,7 @@
 @section('Title', 'Editor')
 
 @section('content')
-    <h1>Edit Content</h1>
+    <h1>Edit {{ $inventory->name }}</h1>
     <div class="form-group">
         <form method="POST" action="/inventory/{{ $inventory->id }}">
             @method('PATCH')
@@ -33,10 +33,10 @@
     </div>
 
     @if($errors->any())
-        <div class="bg-danger">
+        <div class="bg-danger rounded">
             <ul>
                 @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
+                    <li style="color:white">{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
