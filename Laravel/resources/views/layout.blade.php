@@ -19,7 +19,7 @@
     <ul>
         <li>Home <a href="/">here</a></li>
         <li>Contact details <a href="/contact">here</a></li>
-        <li>About page <a href="/about">here</a></li>
+        <li>Inventory page <a href="/inventory">here</a></li>
     </ul>
     @yield('content')
 </div>
