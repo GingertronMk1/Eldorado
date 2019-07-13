@@ -21,4 +21,8 @@
     DELETE  /inventory/id       destroy
 */
 
+
+Route::get('/', 'PagesController@home');
+Route::get('/contact', 'PagesController@contact');
+
 Route::resource('/inventory', 'ItemsController');
