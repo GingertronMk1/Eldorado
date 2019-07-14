@@ -8,10 +8,15 @@ use \App\Item as Item;
 
 class ItemsController extends Controller
 {
+    private $validRules = [
+        'name' => 'required',
+        'description' => ['required', 'min:4'],
+        'unit_cost_price' => ['required', 'gte:0']
+    ];
+
     public function index() {
         $inventory = Item::all();
 
-        //return view('items/index', compact('items'));
         return view('items/index', compact('inventory'));
     }
 
@@ -20,11 +25,9 @@ class ItemsController extends Controller
     }
 
     public function store() {
-        $validated = request()->validate([
-            'name' => 'required',
-            'description' => ['required', 'min:4'],
-            'unit_cost_price' => ['required', 'gte:0']
-        ]);
+        $validated = request()->validate(
+            $this->validRules
+        );
 
         Item::create($validated);
 
@@ -41,11 +44,9 @@ class ItemsController extends Controller
 
     public function update(Item $inventory){
 
-        $validated = request()->validate([
-            'name' => 'required',
-            'description' => ['required', 'min:4'],
-            'unit_cost_price' => ['required', 'gte:0']
-        ]);
+        $validated = request()->validate(
+            $this->validRules
+        );
 
         $inventory->update($validated);
 
