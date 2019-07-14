@@ -33,7 +33,7 @@
                class="form-control {{ $errors->has('unit_cost_price') ? 'is-invalid' : '' }}"
                name="unit_cost_price"
                step="0.01"
-               value="{{ ( ! empty($inventory) ? $inventory->unit_cost_price : old('unit_cost_price') ) }}">
+               value="{{ number_format(( ! empty($inventory) ? $inventory->unit_cost_price : old('unit_cost_price') ), 2, '.', '') }}">
 
         <br>
 
