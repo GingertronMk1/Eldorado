@@ -9,9 +9,10 @@ use \App\Item as Item;
 class ItemsController extends Controller
 {
     public function index() {
-        $items = Item::all();
+        $inventory = Item::all();
 
-        return view('items/index', compact('items'));
+        //return view('items/index', compact('items'));
+        return view('items/index', compact('inventory'));
     }
 
     public function create() {
