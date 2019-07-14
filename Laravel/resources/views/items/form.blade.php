@@ -3,8 +3,8 @@
 @section('content')
     @yield('before_form')
 
-    <form method="POST" action="/inventory">
-        @yield('form_front')
+    <form method="POST" action=@yield('form_action')>
+        @yield('form_method')
 
         @csrf
 
@@ -13,8 +13,7 @@
         <input type="text"
                class="form-control form-control-lg {{ $errors->has('name') ? 'is-invalid' : '' }}"
                name="name"
-               placeholder="Item Name"
-               value="{{ ( ! empty($inventory) ? $inventory->name : '' ) }}">
+               value="{{ ( ! empty($inventory) ? $inventory->name : old('name') ) }}">
 
         <br>
 
@@ -22,7 +21,7 @@
 
         <br>
 
-        <textarea class="form-control {{ $errors->has('description') ? 'is-invalid' : '' }}" name="description">{{ ( ! empty($inventory) ? $inventory->description : '' ) }}</textarea>
+        <textarea class="form-control {{ $errors->has('description') ? 'is-invalid' : '' }}" name="description">{{ ( ! empty($inventory) ? $inventory->description : old('description') ) }}</textarea>
 
         <br>
 
@@ -34,14 +33,14 @@
                class="form-control {{ $errors->has('unit_cost_price') ? 'is-invalid' : '' }}"
                name="unit_cost_price"
                step="0.01"
-               value="{{ ( ! empty($inventory) ? $inventory->unit_cost_price : '' ) }}">
+               value="{{ ( ! empty($inventory) ? $inventory->unit_cost_price : old('unit_cost_price') ) }}">
 
         <br>
 
-        @yield('button')
+        <button type="submit" class="btn btn-primary">
+            @yield('button_text')
+        </button>
     </form>
-
-    @yield('after_form')
 
         @if($errors->any())
             <div class="bg-danger rounded">
@@ -52,4 +51,7 @@
                 </ul>
             </div>
         @endif
+
+    @yield('after_form')
+
 @endsection
