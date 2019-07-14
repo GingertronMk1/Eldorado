@@ -35,19 +35,12 @@
                    class="form-control {{ $errors->has('unit_cost_price') ? 'is-invalid' : '' }}"
                    name="unit_cost_price"
                    step="0.01"
-                   value="{{ $inventory->unit_cost_price }}">
-
+                   value="{{ number_format($inventory->unit_cost_price, 2, '.', ',') }}">
             <br>
 
             <button type="submit" class="btn btn-primary">Update Item</button>
         </form>
         <br>
-
-        <form method="POST" action="/inventory/{{ $inventory->id }}">
-            @method('DELETE')
-            @csrf
-            <button type="submit" class="btn btn-danger">Delete item</button>
-        </form>
     </div>
 
     @if($errors->any())
