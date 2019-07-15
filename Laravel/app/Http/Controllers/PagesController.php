@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 
 class PagesController extends Controller
 {
-    public function home(){
+    public function home()
+    {
         return redirect('/inventory');
         return view('welcome');
     }

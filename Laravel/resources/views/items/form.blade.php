@@ -20,7 +20,8 @@
 
         <br>
 
-        <textarea class="form-control {{ $errors->has('description') ? 'is-invalid' : '' }}" name="description">{{ ( ! empty($inventory) ? $inventory->description : old('description') ) }}</textarea>
+        <textarea class="form-control {{ $errors->has('description') ? 'is-invalid' : '' }}"
+                  name="description">{{ ( ! empty($inventory) ? $inventory->description : old('description') ) }}</textarea>
 
         <br>
 
@@ -41,15 +42,15 @@
         </button>
     </form>
 
-        @if($errors->any())
-            <div class="bg-danger rounded">
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li style="color:white">{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+    @if($errors->any())
+        <div class="bg-danger rounded">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li style="color:white">{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     @yield('after_form')
 

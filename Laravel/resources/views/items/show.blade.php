@@ -7,7 +7,6 @@
 @endsection
 
 @section('content')
-{{--    <h1 style="text-align: center">{{ $inventory->name }}</h1>--}}
     <ul>
         <li>
             <h3>Description</h3>
