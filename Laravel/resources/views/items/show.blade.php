@@ -2,9 +2,12 @@
 
 @section('Title', 'One Item')
 
-@section('content')
-    <h1 style="text-align: center">{{ $inventory->name }}</h1>
+@section('header')
+    {{ $inventory->name }}
+@endsection
 
+@section('content')
+{{--    <h1 style="text-align: center">{{ $inventory->name }}</h1>--}}
     <ul>
         <li>
             <h3>Description</h3>

@@ -2,14 +2,17 @@
 
 @section('title', 'Index')
 
-@section('content')
-    <h1 style="text-align: center">Items In The Inventory</h1>
+@section('header', 'Items In The Inventory')
 
-    <div style="padding-left: 1%">
-        @if($inventory->isEmpty())
+@section('content')
+    @if($inventory->isEmpty())
+        <div style="text-align: center">
             The database is currently empty.
-            Use the link above to add some data to it.
-        @else
+            <a href="/inventory/create">Click here</a> to add some data to it.
+        </div>
+    @else
+        <div style="padding-left: 1%">
+
             <ul>
                 @foreach($inventory as $item)
                     <li>
@@ -19,6 +22,6 @@
                     </li>
                 @endforeach
             </ul>
-        @endif
-    </div>
+        </div>
+    @endif
 @endsection

@@ -25,6 +25,9 @@
         |
         <a href="/">Go home</a>
     </div>
+    <h1 style="text-align: center">
+        @yield('header')
+    </h1>
     <div class="container">
         @yield('content')
     </div>

@@ -5,7 +5,6 @@
 
     <form method="POST" action=@yield('form_action')>
         @yield('form_method')
-
         @csrf
 
         <label for="name">Item Name</label>

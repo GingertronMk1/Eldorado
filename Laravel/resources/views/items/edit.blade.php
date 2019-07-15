@@ -1,5 +1,7 @@
 @extends('items.form')
 
+@section('header', 'Edit Item')
+
 @section('form_action')
     /inventory/{{ $inventory->id }}
 @endsection
@@ -8,4 +10,4 @@
     @method('PATCH')
 @endsection
 
-@section('button_text', 'Update Item')
+@section('button_text', 'Save Item')
