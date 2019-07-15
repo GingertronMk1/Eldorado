@@ -25,9 +25,7 @@ class ItemsController extends Controller
     }
 
     public function store() {
-        $validated = request()->validate(
-            $this->validRules
-        );
+        $validated = request()->validate($this->validRules);
 
         Item::create($validated);
 
@@ -44,9 +42,7 @@ class ItemsController extends Controller
 
     public function update(Item $inventory){
 
-        $validated = request()->validate(
-            $this->validRules
-        );
+        $validated = request()->validate($this->validRules);
 
         $inventory->update($validated);
 
