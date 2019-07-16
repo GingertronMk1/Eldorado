@@ -25,7 +25,7 @@
 
         <br>
 
-        <label for="unit_cost_price">Unit Cost Price</label>
+        <label for="unit_cost_price">Unit Cost Price (£)</label>
 
         <br>
 
@@ -33,7 +33,12 @@
                class="form-control {{ $errors->has('unit_cost_price') ? 'is-invalid' : '' }}"
                name="unit_cost_price"
                step="0.01"
-               value="{{ number_format(( ! empty($inventory) ? $inventory->unit_cost_price : old('unit_cost_price') ), 2, '.', '') }}">
+               value="{{ number_format(
+                 ( ! empty($inventory) ? $inventory->unit_cost_price : old('unit_cost_price') )
+                 , 2
+                 , '.'
+                 , ''
+                 ) }}">
 
         <br>
 
