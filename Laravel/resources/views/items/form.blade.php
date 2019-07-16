@@ -1,8 +1,6 @@
 @extends('items.layout')
 
 @section('content')
-    @yield('before_form')
-
     <form method="POST" action=@yield('form_action')>
         @yield('form_method')
         @csrf
