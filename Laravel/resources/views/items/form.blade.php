@@ -45,6 +45,12 @@
         <button type="submit" class="btn btn-primary">
             @yield('button_text')
         </button>
+
+        <a href=@yield('form_action')>
+            <div class="btn btn-secondary">
+                Cancel
+            </div>
+        </a>
     </form>
 
     @if($errors->any())
