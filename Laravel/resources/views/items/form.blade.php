@@ -43,6 +43,7 @@
     </form>
 
     @if($errors->any())
+        <br>
         <div class="bg-danger rounded">
             <ul>
                 @foreach($errors->all() as $error)
