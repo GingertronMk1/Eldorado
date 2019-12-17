@@ -1,37 +1,46 @@
 main :: IO()
---main = putStrLn . concat . map ((++"\n") . show . emet'') . words $ testString
-main = putStr . concat . map (++"\n") . emet $ testString
---main = putStrLn . (\(s,e) -> s ++ e) . organiser $ testString
+main = ppHTML . emet $ testString
+
+ppHTML :: [String] -> IO()
+ppHTML = putStr . concat . map (++"\n") . ppHTML' 0
+
+ppHTML' :: Int -> [String] -> [String]
+ppHTML' _ []     = []
+ppHTML' n (s:ss) = if (take 2 s) == "</" then let n' = n-2
+                                               in (replicate n' ' ' ++ s) : ppHTML' n' ss
+                                         else (replicate n ' ' ++ s) : ppHTML' (n+2) ss
 
 emet :: String -> [String]
 emet w = let (first, second) = emet' ([],[]) . words $ w
-         in (reverse first) ++ second
+         in first ++ second
 
 emet' :: ([String], [String]) -> [String] -> ([String], [String])
 emet' (firsts, seconds) (s:[]) = let (f', s') = emet'' s
-                                 in (f' : firsts, s' : seconds)
-emet' (firsts, seconds) (s:ss) = case s of "+" -> emet' ((head seconds):firsts, tail seconds) ss
-                                           _   -> let (f', s') = emet'' s
-                                                  in emet' (f' : firsts, s' : seconds) ss
+                                  in (reverse (f' : firsts), s' : seconds)
+emet' (firsts, seconds) (s:ss) = if s == "+" then emet' ((head seconds):firsts, tail seconds) ss
+                                             else let (f', s') = emet'' s
+                                                   in emet' (f' : firsts, s' : seconds) ss
 
 emet'' :: String -> (String, String)
 emet'' = organiser
 
 testString :: String
-testString = ".container.row.column#somethingelse p + .container-fluid"
+testString = ".container.row.column#somethingelse p + .container-fluid span#test-span"
 
 organiser :: String -> (String, String)
 organiser s = let (e',i',c') = organiser' s
                   (e,i,c) = (dropWhile (==' ') e', dropWhile (==' ') i', dropWhile (==' ') c')
-                  element   = e
-                  identity  = if i == "" then "" else " id=\"" ++ i ++ "\""
-                  className = if c == "" then "" else " class=\"" ++ c ++ "\""
+                  element   = if e /= "" then e
+                                         else "div"
+                  identity  = if i /= "" then " id=\"" ++ i ++ "\""
+                                         else ""
+                  className = if c /= "" then " class=\"" ++ c ++ "\""
+                                         else ""
                in ("<" ++ element ++ identity ++ className ++ ">", "</" ++ element ++ ">")
 
 organiser' :: String -> (String, String, String)
 organiser' s = let (e', i', c') = organiser'' ("","","") s 'n'
-                in if elem (head s) ".#" then ("div", reverse i', reverse c')
-                                         else (reverse e', reverse i', reverse c')
+                in (reverse e', reverse i', reverse c')
 
 organiser'' :: (String, String, String) -> String -> Char -> (String, String, String)
 organiser'' t [] _ = t
