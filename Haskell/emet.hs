@@ -6,9 +6,9 @@ ppHTML = putStr . concat . map (++"\n") . ppHTML' 0
 
 ppHTML' :: Int -> [String] -> [String]
 ppHTML' _ []     = []
-ppHTML' n (s:ss) = if (take 2 s) == "</" then let n' = n-2
-                                               in (replicate n' ' ' ++ s) : ppHTML' n' ss
-                                         else (replicate n ' ' ++ s) : ppHTML' (n+2) ss
+ppHTML' n (s:ss) = if take 2 s == "</" then let n' = n-2
+                                             in (replicate n' ' ' ++ s) : ppHTML' n' ss
+                                       else (replicate n ' ' ++ s) : ppHTML' (n+2) ss
 
 emet :: String -> [String]
 emet w = let (first, second) = emet' ([],[]) . words $ w
@@ -17,7 +17,7 @@ emet w = let (first, second) = emet' ([],[]) . words $ w
 emet' :: ([String], [String]) -> [String] -> ([String], [String])
 emet' (firsts, seconds) (s:[]) = let (f', s') = emet'' s
                                   in (reverse (f' : firsts), s' : seconds)
-emet' (firsts, seconds) (s:ss) = if s == "+" then emet' ((head seconds):firsts, tail seconds) ss
+emet' (firsts, seconds) (s:ss) = if s == "+" then emet' (head seconds : firsts, tail seconds) ss
                                              else let (f', s') = emet'' s
                                                    in emet' (f' : firsts, s' : seconds) ss
 
