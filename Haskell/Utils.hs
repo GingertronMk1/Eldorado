@@ -517,6 +517,11 @@ timeTest = getCurrentTime >>= return . diffTimeToPicoseconds . utctDayTime
 woodTest :: IO ()
 woodTest = putStr . concat $ [show x ++ " flat bits " ++ show y ++ " long bits equals £" ++ show  n ++ "\n" | x <- [4.0..4.0], y <- [1.0..50.0], let n = (1.2 * ((19.85*x) + (2.55 * y)))]
 
+lanes :: [Double]
 lanes = let l = 15
             h = 3150
             in takeWhile (<=h) . map (\n -> (n*h/l) - 100) $ [1,2..]
+
+bowling = putStrLn . concat . map ((++"\n") . init . concat) . init . bowling' 0
+bowling' _ 0 = [[""]]
+bowling' i r = concat (replicate i " " : replicate r "x " : []) : concat [bowling' (i+1) (r-1)]
