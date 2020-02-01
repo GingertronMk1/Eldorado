@@ -525,3 +525,9 @@ lanes = let l = 15
 bowling = putStrLn . concat . map ((++"\n") . init . concat) . init . bowling' 0
 bowling' _ 0 = [[""]]
 bowling' i r = concat (replicate i " " : replicate r "x " : []) : concat [bowling' (i+1) (r-1)]
+
+
+
+hexes = map ('#':) (hexes' hexCodes)
+
+hexCodes = ['1'..'9'] ++ ['A'..'F']
