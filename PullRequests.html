@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title></title>
+    <meta name="author" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .card,
+      #results-pane {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid black;
+        border-radius: 0.3rem;
+        padding: 1rem;
+        width: 40%;
+        margin-bottom: 1rem;
+      }
+
+      .card > label {
+        max-width: 40%;
+      }
+      .card > input {
+        max-width: 40%;
+        margin-left: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>The Pull Requesterer</h1>
+
+    <div class="card">
+      <span>
+        <label for="branch-head">Head</label>
+        <input
+          type="text"
+          name="branch-head"
+          id="branch-head"
+          placeholder="The branch you want to merge in"
+        />
+      </span>
+    </div>
+
+    <div class="card">
+      <span>
+        <label for="branch-client_sandbox">Sandbox</label>
+        <input
+          type="checkbox"
+          name="branch-client_sandbox"
+          id="branch-client_sandbox"
+          value="client_sandbox"
+        />
+      </span>
+      <span>
+        <label for="branch-env/uat">UAT</label>
+        <input
+          type="checkbox"
+          name="branch-env/uat"
+          id="branch-env/uat"
+          value="env/uat"
+        />
+      </span>
+    </div>
+
+    <div class="card">
+      <span>
+        <label for="branch-master">Master</label>
+        <input
+          type="checkbox"
+          name="branch-master"
+          id="branch-master"
+          value="master"
+        />
+      </span>
+
+      <span>
+        <label for="branch-client_exteriorplas">ExPlas</label>
+        <input
+          type="checkbox"
+          name="branch-client_exteriorplas"
+          id="branch-client_exteriorplas"
+          value="client_exteriorplas"
+        />
+      </span>
+
+      <span>
+        <label for="branch-client_buildase">Buildbase</label>
+        <input
+          type="checkbox"
+          name="branch-client_buildase"
+          id="branch-client_buildase"
+          value="client_buildbase"
+        />
+      </span>
+
+      <span>
+        <label for="branch-client_mobius">Mobius</label>
+        <input
+          type="checkbox"
+          name="branch-client_mobius"
+          id="branch-client_mobius"
+          value="client_mobius"
+        />
+      </span>
+
+      <span>
+        <label for="branch-env/3bm">3BM</label>
+        <input
+          type="checkbox"
+          name="branch-env/3bm"
+          id="branch-env/3bm"
+          value="env/3bm"
+        />
+      </span>
+    </div>
+
+    <button id="go-button">Go!</button>
+
+    <div id="results-pane"></div>
+
+    <script type="text/javascript">
+      document
+        .getElementById("go-button")
+        .addEventListener("click", function () {
+          var head_val = document.getElementById("branch-head").value;
+          if (head_val) {
+            var results_pane = document.getElementById("results-pane");
+            results_pane.innerHTML = "";
+
+            var results_list = document.createElement("ul");
+
+            var branches = document.querySelectorAll(
+              "input[type=checkbox][id^=branch]:checked"
+            );
+            console.log(branches);
+
+            branches.forEach(function (element) {
+              console.log(element.value);
+
+              var url =
+                "https://github.com/WeAreSweet/AGS-System/compare/" +
+                element.value +
+                "..." +
+                head_val;
+              console.log(url);
+
+              var li = document.createElement("li");
+              var a = document.createElement("a");
+              a.setAttribute("href", url);
+              a.innerText = element.value + " to " + head_val;
+
+              li.appendChild(a);
+              results_list.appendChild(li);
+            });
+            results_pane.appendChild(results_list);
+          }
+        });
+    </script>
+  </body>
+</html>
