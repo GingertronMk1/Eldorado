@@ -3,22 +3,28 @@
   <head>
     <title>Noughts and Crosses</title>
     <style>
+        .board {
+            display: flex;
+            flex-direction: column;
+        }
       .row {
-        clear: both;
+        display: flex;
       }
       .row div {
         padding: 10px;
         border: 1px solid black;
         height: 30px;
         width: 30px;
-        float: left;
-        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
       }
     </style>
   </head>
   <body>
     Click to play Noughts and Crosses.<br />
-    <div>
+    <divc class="board">
       <div class="row">
         <div id="0_0" onclick="place(this)"></div>
         <div id="1_0" onclick="place(this)"></div>
