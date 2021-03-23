@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Snake</title>
+  </head>
+  <body>
+    <canvas id="canvas" width="450" height="300"></canvas><br />
+    <input type="button" onclick="draw()" value="Draw" /><br />
+    <input type="button" onclick="remove()" value="Clear" /><br />
+    <script>
+      var graphics = {
+        board: [
+          "###############",
+          "#             #",
+          "#             #",
+          "#             #",
+          "#    ####     #",
+          "#    ####     #",
+          "#             #",
+          "#             #",
+          "#             #",
+          "###############",
+        ],
+        canvas: document.getElementById("canvas"),
+        squareSize: 30,
+        drawBoard: function () {
+          ctx = graphics.canvas.getContext("2d");
+          var currentYoffset = 0;
+          graphics.board.forEach(function checkLine(line) {
+            console.log(line);
+            line = line.split("");
+            var currentXoffset = 0;
+            line.forEach(function checkCharacter(character) {
+              if (character == "#") {
+                ctx.fillStyle = "black";
+                ctx.fillRect(
+                  currentXoffset,
+                  currentYoffset,
+                  graphics.squareSize,
+                  graphics.squareSize
+                );
+              }
+              currentXoffset += graphics.squareSize;
+            });
+            currentYoffset += graphics.squareSize;
+          });
+        },
+      };
+
+      graphics.drawBoard();
+    </script>
+  </body>
+</html>
