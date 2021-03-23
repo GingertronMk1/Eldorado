@@ -1,0 +1,11 @@
+on: pull_request
+
+jobs:
+  auto_merge:
+    runs-on: ubuntu-latest
+    name: Auto-merge dependabot updates
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Dependabot Merger Bot
+      uses: GingertronMk1/dependabot-merger-bot@1
