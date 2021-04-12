@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Noughts and Crosses</title>
+    <style>
+      .board {
+        display: flex;
+        flex-direction: column;
+      }
+      .row {
+        display: flex;
+      }
+      .row div {
+        padding: 10px;
+        border: 1px solid black;
+        height: 30px;
+        width: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    Click to play Noughts and Crosses.<br />
+    <div class="board">
+      <div class="row">
+        <div id="0_0" onclick="place(this)"></div>
+        <div id="1_0" onclick="place(this)"></div>
+        <div id="2_0" onclick="place(this)"></div>
+      </div>
+      <div class="row">
+        <div id="0_1" onclick="place(this)"></div>
+        <div id="1_1" onclick="place(this)"></div>
+        <div id="2_1" onclick="place(this)"></div>
+      </div>
+      <div class="row">
+        <div id="0_2" onclick="place(this)"></div>
+        <div id="1_2" onclick="place(this)"></div>
+        <div id="2_2" onclick="place(this)"></div>
+      </div>
+    </div>
+
+    <script>
+      var currentPlayer = "O";
+      var won = false;
+
+      function place(box) {
+        if (box.innerText != "" || won) return;
+        box.innerText = currentPlayer;
+        currentPlayer == "O" ? (currentPlayer = "X") : (currentPlayer = "O");
+        checkGameBoard();
+      }
+
+      function checkGameBoard() {
+        var d = [[], []];
+        var size = 3;
+
+        for (var i = 0; i < size; i++) {
+          checkWinner(
+            document.getElementById("0_" + i).innerText,
+            document.getElementById("1_" + i).innerText,
+            document.getElementById("2_" + i).innerText
+          );
+
+          checkWinner(
+            document.getElementById(i + "_0").innerText,
+            document.getElementById(i + "_1").innerText,
+            document.getElementById(i + "_2").innerText
+          );
+
+          d[0][i] = document.getElementById(i + "_" + i).innerText;
+          d[1][i] = document.getElementById(i + "_" + (size - 1 - i)).innerText;
+        }
+        console.table(d);
+
+        checkWinner(d[0][0], d[0][1], d[0][2]);
+        checkWinner(d[1][0], d[1][1], d[1][2]);
+      }
+
+      function checkWinner(first, second, third) {
+        if (first != "" && first == second && first == third) {
+          alert("Winner!");
+          won = true;
+        }
+      }
+    </script>
+  </body>
+</html>
