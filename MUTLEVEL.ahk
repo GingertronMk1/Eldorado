@@ -5,14 +5,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #MaxThreads 2
 #SingleInstance Force
 
-loop = 1
-While(loop > 0) {		; Circa an hour long loop
-	Sleep 10000
-	ReRun()
-	Sleep 30000
-}
-
-PgDn::ReRun()
+; +/::ReRun(); return
 
 ReRun() {
 	Loop 6 {				; Make sure we're at the bottom of the options list
@@ -34,5 +27,10 @@ ReRun() {
 		Send {Space up}
 		Sleep 500
 	}
+}
 
+While(1 > 0) {
+	Sleep 10000
+	ReRun()
+	Sleep 35000
 }
