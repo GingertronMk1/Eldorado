@@ -22,12 +22,11 @@ seasonGen = filter (not . duplicates . map fst)
             . sequence
             . groupBy (\(_,as) (_,bs) -> as==bs)
             . sortBy (comparing snd)
-            . concat
-            . map (\(a,bs) -> [(a,b) | b<-bs])
+            . concatMap (\(a,bs) -> [(a,b) | b<-bs])
 
 duplicates :: Eq a => [a] -> Bool
 duplicates []     = False
-duplicates (a:as) = if elem a as then True else duplicates as
+duplicates (a:as) = elem a as || duplicates as
 
 seasons' :: [[(String, Int)]] -> IO ()
 seasons' [] = putStrLn "No shows provided"
