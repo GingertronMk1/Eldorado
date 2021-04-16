@@ -5,7 +5,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #MaxThreads 2
 #SingleInstance Force
 
-; +/::ReRun(); return
+; +/::ReRun()
 
 ReRun() {
 	Loop 6 {				; Make sure we're at the bottom of the options list
@@ -29,7 +29,7 @@ ReRun() {
 	}
 }
 
-While(1 > 0) {
+While(0 > 0) {
 	Sleep 10000
 	ReRun()
 	Sleep 35000
