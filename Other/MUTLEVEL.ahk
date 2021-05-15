@@ -2,29 +2,35 @@
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 ; SendMode Input ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+#MaxThreads 2
+#SingleInstance Force
 
-+/::
-Loop 6 {
-	Send {Down down}
-	Sleep 20
-	Send {Down up}
++/::ReRun()
+
+ReRun() {
+	Loop 6 {				; Make sure we're at the bottom of the options list
+		Send {Down down}
+		Sleep 50
+		Send {Down up}
+		Sleep 50
+	}
+
+	Sleep 50				; 'Replay Challenge' is the second from bottom
+	Send {Up down}
 	Sleep 50
-}
-
-Sleep 50
-Send {Up down}
-Sleep 20
-Send {Up up}
-Sleep 500
-
-Loop 7 {
-	Send {Space down}
-	Sleep 20
-	Send {Space up}
+	Send {Up up}
 	Sleep 500
+
+	Loop 7 {				; Mash space bar until we do the first recommended play
+		Send {Space down}
+		Sleep 50
+		Send {Space up}
+		Sleep 500
+	}
 }
 
-return
-
-
-
+While(0 > 0) {
+	Sleep 10000
+	ReRun()
+	Sleep 35000
+}
