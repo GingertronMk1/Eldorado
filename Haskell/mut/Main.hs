@@ -163,33 +163,20 @@ numberOfEachTeam' =
 rmDups :: (Eq a, Ord a) => [a] -> [a]
 rmDups = map head . group . sort
 
-oneList :: [a] -> [b] -> [(a, b)]
-oneList _ [] = []
-oneList [] _ = []
-oneList (x : xs) (y : ys) = (x, y) : oneList xs ys
-
 padRight :: Int -> Char -> String -> String
 padRight l padding str = str ++ replicate (l - length str) padding
 
-myMaximumBy :: (Ord t1, Num t2, Num t1) => (t2 -> t1) -> [t2] -> t2
-myMaximumBy = myMaximumBy' 0 0
-
-myMaximumBy' :: Ord t1 => t2 -> t1 -> (t2 -> t1) -> [t2] -> t2
-myMaximumBy' currMax _ _ [] = currMax
-myMaximumBy' currMax currMaxVal f (a : as) =
-  let newMaxVal = f a
-   in if newMaxVal > currMaxVal
-        then myMaximumBy' a newMaxVal f as
-        else myMaximumBy' currMax currMaxVal f as
-
 makeNumberHumanReadable :: Int -> String
-makeNumberHumanReadable = reverse . intercalate "," . makeNumberHumanReadable' . reverse . show
-
-makeNumberHumanReadable' :: [a] -> [[a]]
-makeNumberHumanReadable' [] = []
-makeNumberHumanReadable' xs = 
-  let (first, rest) = splitAt 3 xs
-    in first:makeNumberHumanReadable' rest
+makeNumberHumanReadable =
+  reverse
+  . intercalate ","
+  . makeNumberHumanReadable'
+  . reverse
+  . show
+  where makeNumberHumanReadable' [] = []
+        makeNumberHumanReadable' xs = 
+          let (first, rest) = splitAt 3 xs
+          in first:makeNumberHumanReadable' rest
 
 {- ACTUAL CALCULATIONS -}
 
@@ -215,7 +202,7 @@ longestTeamNameLength :: Int
 longestTeamNameLength = length longestTeamName
 
 allOptions :: Lineup -> [[(Player, Team)]]
-allOptions t = map (oneList (map fst t)) . mapM snd $ t
+allOptions t = map (zip (map fst t)) . mapM snd $ t
 
 allOptionsProcessed :: Lineup -> [Option]
 allOptionsProcessed =
