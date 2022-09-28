@@ -8,9 +8,9 @@ type Position = String
 
 type Player = String
 
-type PlayerTeam = (Player, [Team])
+type PlayerTeams = (Player, [Team])
 
-type Lineup = [PlayerTeam]
+type Lineup = [PlayerTeams]
 
 type LiterateLineup = [(Position, Lineup)]
 
@@ -21,6 +21,12 @@ type Option = [TeamPlayer]
 type IterationCount = Int
 
 type Iteration = (IterationCount, Int, Option)
+
+data IterationOrNumber
+  = Iteration Iteration
+  | Number Int
+
+{- THE TEAM DATA -}
 
 offense :: LiterateLineup
 offense =
@@ -36,7 +42,8 @@ offense =
       ]
     ),
     ( "fb",
-      [ ("Jim Taylor", ["Packers", "Saints", "Legends"])
+      [ ("Jim Taylor", ["Packers", "Saints", "Legends"]),
+        ("Reggie Gilliam", ["Bills"])
       ]
     ),
     ( "te",
@@ -81,8 +88,8 @@ defense :: LiterateLineup
 defense =
   [ ( "mlb",
       [ ("Isaiah Simmons", ["Cardinals"]),
-        ("Zaven Collins", ["Cardinals"]),
-        ("Jordyn Brooks", ["Seahawks"])
+        ("Tremaine Edmunds", ["Bills"]),
+        ("Zaven Collins", ["Cardinals"])
       ]
     ),
     ( "rolb",
@@ -140,6 +147,19 @@ squad =
       specialTeams
     ]
 
+numberOfEachTeam :: [(Team, Int)]
+numberOfEachTeam = numberOfEachTeam' squad
+
+numberOfEachTeam' :: Lineup -> [(Team, Int)]
+numberOfEachTeam' =
+  sortOn (Down . snd)
+    . map (\arr -> (head arr, length arr))
+    . group
+    . sort
+    . concatMap snd
+
+{- HELPER FUNCTIONS -}
+
 rmDups :: (Eq a, Ord a) => [a] -> [a]
 rmDups = map head . group . sort
 
@@ -148,11 +168,8 @@ oneList _ [] = []
 oneList [] _ = []
 oneList (x : xs) (y : ys) = (x, y) : oneList xs ys
 
-padRight :: Int -> String -> String -> String
-padRight l padding str =
-  if length str - l < 0
-    then padRight l padding (str ++ padding)
-    else str
+padRight :: Int -> Char -> String -> String
+padRight l padding str = str ++ replicate (l - length str) padding
 
 myMaximumBy :: (Ord t1, Num t2, Num t1) => (t2 -> t1) -> [t2] -> t2
 myMaximumBy = myMaximumBy' 0 0
@@ -165,14 +182,31 @@ myMaximumBy' currMax currMaxVal f (a : as) =
         then myMaximumBy' a newMaxVal f as
         else myMaximumBy' currMax currMaxVal f as
 
-numOptions :: Integer -- keeping this integer so it can deal with lorge numbers
-numOptions = product $ map (toInteger . length . snd) team
+makeNumberHumanReadable :: Int -> String
+makeNumberHumanReadable = reverse . intercalate "," . makeNumberHumanReadable' . reverse . show
+
+makeNumberHumanReadable' :: [a] -> [[a]]
+makeNumberHumanReadable' [] = []
+makeNumberHumanReadable' xs = 
+  let (first, rest) = splitAt 3 xs
+    in first:makeNumberHumanReadable' rest
+
+{- ACTUAL CALCULATIONS -}
+
+numOptions :: Int
+numOptions = product $ map (length . snd) team
 
 team :: Lineup
 team = map (DB.second sort) squad
 
 allTeams :: [Team]
 allTeams = (sort . rmDups . concatMap snd) team
+
+allOptionsAlt :: Lineup -> [[(Player, Team)]]
+allOptionsAlt = mapM allOptionsAlt'
+
+allOptionsAlt' :: PlayerTeams -> [(Player, Team)]
+allOptionsAlt' (p, ts) = [(p, t) | t <- ts]
 
 longestTeamName :: Team
 longestTeamName = maximumBy (comparing length) allTeams
@@ -192,29 +226,64 @@ allOptionsProcessed =
         . groupBy (\(_, t1) (_, t2) -> t1 == t2)
         . sortOn snd
     )
-    . allOptions
+    . allOptionsAlt
 
-allOptionsProcessedPrinting :: Lineup -> [(IterationCount, Int, Option)]
-allOptionsProcessedPrinting = allOptionsProcessedPrinting' 1 1 [] . allOptionsProcessed
+allOptionsProcessedPrinting :: Lineup -> [IterationOrNumber]
+allOptionsProcessedPrinting =
+  allOptionsProcessedPrinting' 1 1 []
+    . allOptionsProcessed
 
-allOptionsProcessedPrinting' :: IterationCount -> Int -> Option -> [Option] -> [Iteration]
-allOptionsProcessedPrinting' _ _ _ [] = []
+allOptionsProcessedPrinting' :: IterationCount -> Int -> Option -> [Option] -> [IterationOrNumber]
+allOptionsProcessedPrinting' i n o [] = [Iteration (i, n, o)]
 allOptionsProcessedPrinting' i n o (a : as) =
   let aLength = sum . map (length . snd) . take 3 $ a
+      next = i + 1
+      notLarger = allOptionsProcessedPrinting' next n o as
    in if aLength > n
-        then (i, aLength, a) : allOptionsProcessedPrinting' (i + 1) aLength a as
-        else allOptionsProcessedPrinting' (i + 1) n o as
+        then Iteration (i, aLength, a) : allOptionsProcessedPrinting' next aLength a as
+        else
+          if mod i (div numOptions 100) == 0
+            then Number i : notLarger
+            else notLarger
 
-ppIteration :: Iteration -> String
-ppIteration (iterationCount, maxValue, options) =
-  intercalate "\n" $ ("Iteration " ++ show iterationCount) : map (("  " ++) . ppTeamPlayer) options
+ppIteration :: IterationOrNumber -> String
+ppIteration (Iteration (iterationCount, maxValue, options)) =
+  intercalate
+    "\n"
+    [ "Iteration " ++ makeNumberHumanReadable iterationCount,
+      intercalate "\n" $ map ppTeamPlayer options
+    ]
   where
     ppTeamPlayer (team, players) =
-      padRight longestTeamNameLength " " team
-        ++ " | "
-        ++ (show . length) players
-        ++ " | "
-        ++ intercalate ", " players
+      concat
+        [ "    ",
+          padRight longestTeamNameLength ' ' team,
+          " | ",
+          show $ length players,
+          " | ",
+          intercalate ", " players
+        ]
+ppIteration (Number n) =
+  unwords
+    [ "Iteration",
+      makeNumberHumanReadable n,
+      "out of",
+      makeNumberHumanReadable numOptions,
+      "("
+        ++ ( show
+               . round
+               . (100 *)
+               . (\v -> fromIntegral n / v)
+               . fromIntegral
+           )
+          numOptions
+        ++ "%)"
+    ]
 
 main :: IO ()
-main = putStrLn . intercalate "\n\n" . map ppIteration . allOptionsProcessedPrinting $ team
+main =
+  putStrLn
+    . intercalate "\n\n"
+    . map ppIteration
+    . allOptionsProcessedPrinting
+    $ team
