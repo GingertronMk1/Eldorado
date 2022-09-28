@@ -190,10 +190,7 @@ allTeams :: [Team]
 allTeams = (sort . rmDups . concatMap snd) team
 
 allOptionsAlt :: Lineup -> [[(Player, Team)]]
-allOptionsAlt = mapM allOptionsAlt'
-
-allOptionsAlt' :: PlayerTeams -> [(Player, Team)]
-allOptionsAlt' (p, ts) = [(p, t) | t <- ts]
+allOptionsAlt = mapM (\(p, ts) -> [(p, t) | t <- ts])
 
 longestTeamName :: Team
 longestTeamName = maximumBy (comparing length) allTeams
