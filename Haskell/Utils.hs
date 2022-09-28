@@ -6,6 +6,9 @@ module Utils where
 import Data.List
 import Data.Ord
 import Data.Time.Clock
+import Control.Monad
+import Control.Arrow
+import Data.Functor
 
 -- Starting with some Fibonacci stuff:
 
@@ -21,7 +24,7 @@ nFibs n = take n fibs
 -- Random Listing Stuff
 
 genList :: [Int]
-genList = (concat . reverse . sequence . replicate 2) [15,14..0]
+genList = (concat . reverse . Control.Monad.replicateM 2) [15,14..0]
 
 factorial :: Int -> Int
 factorial n | n < 2 = 1
@@ -56,7 +59,7 @@ primeFactors n = case factors of [] -> [n]
 intToList :: Int -> [Int]
 intToList n = intToList' n []
               where intToList' 0 xs = xs
-                    intToList' n xs = intToList' (div n 10) ((mod n 10):xs)
+                    intToList' n xs = intToList' (div n 10) (mod n 10:xs)
 
 sumDigits :: Int -> Int
 sumDigits n = sum (intToList n)
@@ -68,7 +71,7 @@ sumsTo n = [x | x <- [0..10^12], sumDigits x == n]
 
 intSqrt :: Int -> Int
 intSqrt n = intSqrt' n 0
-            where intSqrt' n rt = if (rt*rt) < n then intSqrt' n (rt+1)
+            where intSqrt' n rt = if rt*rt < n then intSqrt' n (rt+1)
                                                  else rt
 
 -- Sorting Algorithms
@@ -79,7 +82,7 @@ intSqrt n = intSqrt' n 0
 mySorted :: Ord a => [a] -> Bool
 mySorted []       = True
 mySorted [a]      = True
-mySorted (a:b:as) = if a > b then False else mySorted (b:as)
+mySorted (a:b:as) = a <= b && mySorted (b:as)
 
 -- Bubble-sort
 
@@ -88,9 +91,9 @@ bubble ns = if mySorted lastRound then lastRound
                                   else bubble lastRound
             where lastRound = bubble' ns
                   bubble' x = case x of [] -> []
-                                        (m:[]) -> [m]
-                                        (m:n:ms) -> if m > n then n:(bubble' (m:ms))
-                                                             else m:(bubble' (n:ms))
+                                        [m] -> [m]
+                                        (m:n:ms) -> if m > n then n:bubble' (m:ms)
+                                                             else m:bubble' (n:ms)
 
 
 -- First, a test case
@@ -113,7 +116,7 @@ selection xs = selection' xs []
 myInsert :: Ord a => a -> [a] -> [a]
 myInsert x [] = [x]
 myInsert x (y:ys) | x < y     = x:y:ys
-                  | otherwise = y:(myInsert x ys)
+                  | otherwise = y:myInsert x ys
 
 
 -- Speaking of whick...
@@ -128,8 +131,8 @@ mergesort xs = merge (mergesort f) (mergesort s)
 merge :: Ord a => [a] -> [a] -> [a]
 merge xs [] = xs
 merge [] ys = ys
-merge (x:xs) (y:ys) = if x < y then x:(merge xs (y:ys))
-                               else y:(merge (x:xs) ys)
+merge (x:xs) (y:ys) = if x < y then x:merge xs (y:ys)
+                               else y:merge (x:xs) ys
 
 -- Quick sort
 quickSort :: Ord a => [a] -> [a]
@@ -152,11 +155,11 @@ runlength [] = []
 runlength r@(x:xs) = runlength' r x 0
                      where runlength' [] v l = [(v,l)]
                            runlength' (a:as) v l = if a == v then runlength' as v (l+1)
-                                                             else (v,l):(runlength' as a 1)
+                                                             else (v,l):runlength' as a 1
 
 unrunlength :: [(Value, Length)] -> [Value]
 unrunlength [] = []
-unrunlength (t:ts) = (replicate l v) ++ (unrunlength ts)
+unrunlength (t:ts) = replicate l v ++ unrunlength ts
                      where (v,l) = t
 
 rltest :: [Int] -> [Int]
@@ -165,13 +168,13 @@ rltest = unrunlength . runlength
 dpcm :: [Int] -> [Int]
 dpcm ns = dpcm' ns 0
           where dpcm' [] _ = []
-                dpcm' (n:ns) v = (n-v):(dpcm' ns n)
+                dpcm' (n:ns) v = (n-v):dpcm' ns n
 
 undpcm :: [Int] -> [Int]
 undpcm ns = undpcm' ns 0
             where undpcm' [] _ = []
                   undpcm' (n:ns) v = let newN = n + v
-                                      in newN:(undpcm' ns newN)
+                                      in newN:undpcm' ns newN
 
 dpcmtest = undpcm . dpcm
 
@@ -182,7 +185,8 @@ rmDups = map head . group . sort
 
 sieve :: Int -> [Int]
 sieve n = sieve' [1..n]
-          where sieve' (x:xs) = if elem x xs then sieve' xs else xs
+          where sieve' [] = []
+                sieve' (x:xs) = if x `elem` xs then sieve' xs else xs
 
 
 screenDims :: (Double, Double) -> Double -> (Double, Double)
@@ -191,28 +195,28 @@ screenDims (x, y) d = (a , a*r)
                             a = sqrt (d*d / (1 + r*r))
 
 times :: [(String, Int)] -> [(String, Int)]
-times = reverse . sortBy (comparing snd) . props . accumulate . groupBy (\x y -> fst x == fst y) . sortBy (comparing fst)
+times = sortOn (Down . snd) . props . accumulate . groupBy (\x y -> fst x == fst y) . sortBy (comparing fst)
 
 accumulate :: [[(String, Int)]] -> [(String, Int)]
-accumulate = map (\ss -> ((fst . head) ss, (sum . map snd) ss))
+accumulate = map ((fst . head) Control.Arrow.&&& (sum . map snd))
 
 props :: [(String, Int)] -> [(String, Int)]
 props ts = map (\(s, i) -> (s, quot (i*100) ((sum . map snd) ts))) ts
 
-numOfEach n = let bigNums = [1..1000] in (putStr . concat) [show (td2,td,fg) ++ "\n" | td2<-bigNums, td<-bigNums, fg<-bigNums, ((8*td2)+(7*td)+(3*fg))==n]
+numOfEach n = let bigNums = [1..1000] in (putStr . concat) [show (td2,td,fg) ++ "\n" | td2<-bigNums, td<-bigNums, fg<-bigNums, 8*td2+7*td+3*fg==n]
 
 dartBoard :: [Int]
 dartBoard = let oneTwenty = [0..20] in rmDups (oneTwenty ++ map (*2) oneTwenty ++ map (*3) oneTwenty ++ [25,50])
 
 
 
-dartsScores' n = let sc = [(a,b,c) | a<-dartBoard, b<-dartBoard, c<-(50:[40,38..2]), a+b+c==n]
+dartsScores' n = let sc = [(a,b,c) | a<-dartBoard, b<-dartBoard, c<-50:[40,38..2], a+b+c==n]
                      sn = show n
                  in if null sc then sn ++ "\n" ++ replicate (length sn) '-' ++ "\nFucked it"
                                else let (a,b,c) = head sc
                                     in sn ++ "\n" ++ replicate (length sn) '-' ++ "\n1:\t" ++ show a ++ "\n2:\t" ++ show b ++ "\n3:\t" ++ (if c == 50 then "Bull" else "double " ++ show (quot c 2))
 
-dartsScores = (putStrLn . concat . intersperse "\n\n" . map dartsScores') [0..180]
+dartsScores = (putStrLn . intercalate "\n\n" . map dartsScores') [0..180]
 
 -- Added 2018-01-14 ------------------------------------------------------------
 
@@ -229,7 +233,7 @@ cds = [("Robbie Williams - Greatest Hits",100),
 
 removeShorter' :: Eq b => (a -> b) -> [[a]] -> [[a]] -> [[a]]
 removeShorter' f t []     = t
-removeShorter' f t (a:as) = if (or . map (null . ((map f a)\\) . map f)) t
+removeShorter' f t (a:as) = if any (null . (map f a\\) . map f) t
                             then removeShorter' f as t
                             else removeShorter' f as (a:t)
 
@@ -237,9 +241,9 @@ removeShorter :: Eq b => (a -> b) -> [[a]] -> [[a]]
 removeShorter f as = removeShorter' f (removeShorter' f as []) []
 
 cdO :: [[(String, Int)]]
-cdO = (sortBy (comparing length) . removeShorter (fst) . rmDups . filter ((<=voucher) . sum . map snd)) [(sort . take n) l | l <- permutations cds, n <- [1..(length cds)]]
+cdO = (sortOn length . removeShorter fst . rmDups . filter ((<=voucher) . sum . map snd)) [(sort . take n) l | l <- permutations cds, n <- [1..(length cds)]]
 
-ppCDO = (putStrLn . concat . intersperse "\n" . map (\ts -> ((show . sum . map snd) ts ++ "p:\t" ++ (concat . intersperse ", " . map fst) ts))) cdO
+ppCDO = (putStrLn . intercalate "\n" . map (\ts -> (show . sum . map snd) ts ++ "p:\t" ++ (intercalate ", " . map fst) ts)) cdO
 
 -- Added 2018-01-24 ------------------------------------------------------------
 
@@ -265,25 +269,24 @@ seasonGen = filter (not . duplicates . map fst)
             . sequence
             . groupBy (\(_,as) (_,bs) -> as==bs)
             . sortBy (comparing snd)
-            . concat
-            . map (\(a,bs) -> [(a,b) | b<-bs])
+            . concatMap (\(a,bs) -> [(a,b) | b<-bs])
 
 duplicates :: Eq a => [a] -> Bool
 duplicates []     = False
-duplicates (a:as) = if elem a as then True else duplicates as
+duplicates (a:as) = elem a as || duplicates as
 
 seasons' :: [[(String, Int)]] -> IO ()
 seasons' [] = putStrLn "No shows provided"
 seasons' a  = let ca = concat a
-                  longestName = ((+1) . length . last . sortBy (comparing length) . map fst) ca
-                  addPipe     = concat . intersperse "| "
-                  padding x   = replicate (longestName - (length x)) ' '
+                  longestName = ((+1) . length . maximumBy (comparing length) . map fst) ca
+                  addPipe     = intercalate "| "
+                  padding x   = replicate (longestName - length x) ' '
                   headerRow   = addPipe [let n' = "Slot " ++ show n in n' ++ padding n' | n<-(rmDups . map snd) ca]
-                  ppShows     = (concat . intersperse "\n" . map (\ss -> addPipe [n ++ padding n | n<-(map fst) ss])) a
+                  ppShows     = (intercalate "\n" . map (\ss -> addPipe [n ++ padding n | n<-map fst ss])) a
                in putStrLn (headerRow ++ "\n" ++ replicate (length headerRow) '-' ++ "\n" ++ ppShows)
 
 count :: Ord a => [a] -> [(a, Int)]
-count = map (\l -> (head l, length l)) . group . sort
+count = map (head Control.Arrow.&&& length) . group . sort
 
 seasons :: IO ()
 seasons =  (seasons' . seasonGen) seasonShows
@@ -291,8 +294,9 @@ seasons =  (seasons' . seasonGen) seasonShows
 
 -- Added 2018-10-08
 
-subarrays (n:[]) = [[n]]
-subarrays (n:ns) = ((n:ns):subarrays ns)
+subarrays [] = []
+subarrays [n] = [[n]]
+subarrays (n:ns) = (n:ns):subarrays ns
 
 -- Added 2018-11-05
 
@@ -351,7 +355,7 @@ limitTree n (Node x l r) = Node x (limitTree (n-1) l) (limitTree (n-1) r)
 
 treeHeight :: Tree a -> Int
 treeHeight = treeHeight' 2
-             where treeHeight' n Leaf = (n-1)
+             where treeHeight' n Leaf = n-1
                    treeHeight' n (Node _ l r) = larger (treeHeight' (n+1) l) (treeHeight' (n+1) r)
                    larger x y = if x >= y then x else y
 
@@ -438,7 +442,7 @@ fAdd :: a -> FIFO a -> FIFO a
 fAdd x (fs, rs) = (fs, x:rs)
 
 fDrop :: FIFO a -> FIFO a
-fDrop (f:[], rs) = fFix ([], rs)
+fDrop ([f], rs) = fFix ([], rs)
 fDrop (f:fs, rs) = (fs, rs)
 
 fExtract :: FIFO a -> (a, FIFO a)
@@ -450,10 +454,10 @@ fHead (f:_, _) = f
 
 treeBFSFIFO :: Tree a -> [a]
 treeBFSFIFO
-  = (reverse . treeBFSFIFO' [] . (\t -> fAdd t ([],[])))
+  = reverse . treeBFSFIFO' [] . (\t -> fAdd t ([],[]))
     where treeBFSFIFO' ns ([],[]) = ns
-          treeBFSFIFO' ns q = case (fExtract q) of (Leaf, q')       -> treeBFSFIFO' ns q'
-                                                   (Node x l r, q') -> treeBFSFIFO' (x:ns) ((fAdd r . fAdd l) q')
+          treeBFSFIFO' ns q = case fExtract q of (Leaf, q')       -> treeBFSFIFO' ns q'
+                                                 (Node x l r, q') -> treeBFSFIFO' (x:ns) ((fAdd r . fAdd l) q')
 
 bfsTest f n = (map length . group . f) (treeGen n)
 
@@ -470,29 +474,29 @@ makePairs l@(x:xs) = zip l (xs ++ [x])
 data S a = a `Fby` (S a) deriving (Eq, Show)
 
 instance Functor S where
-  fmap f (a `Fby` sa) = f a `Fby` (fmap f sa)
+  fmap f (a `Fby` sa) = f a `Fby` fmap f sa
 
 instance Applicative S where
-  pure x = (x `Fby` pure x)
+  pure x = x `Fby` pure x
   (<*>) (f `Fby` sf) (a `Fby` sa) = f a `Fby` (sf <*> sa)
 
 instance Num a => Num (S a) where
-  (+) s1 s2     = pure (+) <*> s1 <*> s2
-  (-) s1 s2     = pure (-) <*> s1 <*> s2
-  (*) s1 s2     = pure (*) <*> s1 <*> s2
-  abs sa        = pure abs <*> sa
-  fromInteger x = pure fromInteger <*> pure x
-  signum sa     = pure signum <*> sa
+  (+) s1 s2     = (+) <$> s1 <*> s2
+  (-) s1 s2     = (-) <$> s1 <*> s2
+  (*) s1 s2     = (*) <$> s1 <*> s2
+  abs sa        = abs <$> sa
+  fromInteger x = pure (fromInteger x)
+  signum sa     = signum <$> sa
 
 nat :: S Int
-nat = 1 `Fby` (fmap (+1) nat)
+nat = 1 `Fby` fmap (+1) nat
 
 fib :: S Int
 fib = 1 `Fby` (1 `Fby` (sTail fib + fib))
       where sTail (_ `Fby` sa) = sa
 
 sFilt :: (a -> Bool) -> S a -> S a
-sFilt f (a `Fby` sa) = if f a then a `Fby` (sFilt f sa)
+sFilt f (a `Fby` sa) = if f a then a `Fby` sFilt f sa
                               else sFilt f sa
 
 toList :: S a -> [a]
@@ -509,25 +513,27 @@ ton n = let n3 = n/3
              | a <- [n3,n3-1..1], b <- [a,a-1..a/2], let c = sqrt (a^2 + b^2), a + b + c > 0.8 * n && a + b + c < n]
 
 ppShow :: Show a => [a] -> IO()
-ppShow = putStrLn . concat . map ((\s -> s ++ "\n") . show)
+ppShow = putStrLn . concatMap ((++ "\n") . show)
 
 timeTest :: IO Integer
-timeTest = getCurrentTime >>= return . diffTimeToPicoseconds . utctDayTime
+timeTest = getCurrentTime Data.Functor.<&> (diffTimeToPicoseconds . utctDayTime)
 
 woodTest :: IO ()
-woodTest = putStr . concat $ [show x ++ " flat bits " ++ show y ++ " long bits equals £" ++ show  n ++ "\n" | x <- [4.0..4.0], y <- [1.0..50.0], let n = (1.2 * ((19.85*x) + (2.55 * y)))]
+woodTest = putStr . concat $ [show x ++ " flat bits " ++ show y ++ " long bits equals £" ++ show  n ++ "\n" | x <- [4.0..4.0], y <- [1.0..50.0], let n = 1.2 * (19.85*x + 2.55 * y)]
 
 lanes :: [Double]
 lanes = let l = 15
             h = 3150
-            in takeWhile (<=h) . map (\n -> (n*h/l) - 100) $ [1,2..]
+            in takeWhile (<=h) . map (\n -> n*h/l - 100) $ [1,2..]
 
-bowling = putStrLn . concat . map ((++"\n") . init . concat) . init . bowling' 0
+bowling :: Int -> IO ()
+bowling = putStrLn . concatMap ((++"\n") . init . concat) . init . bowling' 0
 bowling' _ 0 = [[""]]
-bowling' i r = concat (replicate i " " : replicate r "x " : []) : concat [bowling' (i+1) (r-1)]
+bowling' i r = (replicate i " " ++ replicate r "x ") : bowling' (i+1) (r-1)
 
 
+nonoGram :: [Int] -> Int
+nonoGram as = nonoGramSum' as 0 + (length as - 1)
 
-hexes = map ('#':) (hexes' hexCodes)
-
-hexCodes = ['1'..'9'] ++ ['A'..'F']
+nonoGramSum' :: [Int] -> Int -> Int
+nonoGramSum' as acc = foldl (+) acc as
