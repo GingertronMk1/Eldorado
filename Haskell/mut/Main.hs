@@ -169,14 +169,15 @@ padRight l padding str = str ++ replicate (l - length str) padding
 makeNumberHumanReadable :: Int -> String
 makeNumberHumanReadable =
   reverse
-  . intercalate ","
-  . makeNumberHumanReadable'
-  . reverse
-  . show
-  where makeNumberHumanReadable' [] = []
-        makeNumberHumanReadable' xs = 
-          let (first, rest) = splitAt 3 xs
-          in first:makeNumberHumanReadable' rest
+    . intercalate ","
+    . makeNumberHumanReadable'
+    . reverse
+    . show
+  where
+    makeNumberHumanReadable' [] = []
+    makeNumberHumanReadable' xs =
+      let (first, rest) = splitAt 3 xs
+       in first : makeNumberHumanReadable' rest
 
 {- ACTUAL CALCULATIONS -}
 
@@ -232,37 +233,36 @@ allOptionsProcessedPrinting' i n o (a : as) =
 
 ppIteration :: IterationOrNumber -> String
 ppIteration (Iteration (iterationCount, maxValue, options)) =
-  intercalate
-    "\n"
-    [ "Iteration " ++ makeNumberHumanReadable iterationCount,
-      intercalate "\n" $ map ppTeamPlayer options
-    ]
-  where
-    ppTeamPlayer (team, players) =
-      concat
-        [ "    ",
-          padRight longestTeamNameLength ' ' team,
-          " | ",
-          show $ length players,
-          " | ",
-          intercalate ", " players
-        ]
+  "Iteration "
+    ++ makeNumberHumanReadable iterationCount
+    ++ "\n"
+    ++ ( intercalate "\n"
+           . map
+             ( \(team, players) ->
+                 "    "
+                   ++ padRight longestTeamNameLength ' ' team
+                   ++ " | "
+                   ++ (show . length) players
+                   ++ " | "
+                   ++ intercalate ", " players
+             )
+       )
+      options
 ppIteration (Number n) =
-  unwords
-    [ "Iteration",
-      makeNumberHumanReadable n,
-      "out of",
-      makeNumberHumanReadable numOptions,
-      "("
-        ++ ( show
-               . round
-               . (100 *)
-               . (\v -> fromIntegral n / v)
-               . fromIntegral
-           )
-          numOptions
-        ++ "%)"
-    ]
+  "Iteration"
+    ++ " "
+    ++ makeNumberHumanReadable n
+    ++ " out of "
+    ++ makeNumberHumanReadable numOptions
+    ++ "("
+    ++ ( show
+           . round
+           . (100 *)
+           . (\v -> fromIntegral n / v)
+           . fromIntegral
+       )
+      numOptions
+    ++ "%)"
 
 main :: IO ()
 main =
