@@ -236,8 +236,10 @@ allOptionsProcessedPrinting' it@(i, n, o) (a : as) =
 
 allOptionsProcessedPrinting'' :: Option -> Option -> Bool
 allOptionsProcessedPrinting'' tps1 tps2 =
-   stDevOfOption tps1 > stDevOfOption tps2
-   where stDevOfOption = avgDistanceFromMultiplesOf5 . map (length . snd) . take 3
+  stDevOfOption tps1 > stDevOfOption tps2
+  where
+    stDevOfOption =
+      avgDistanceFromMultiplesOf5 . map (length . snd) . take 3
 
 -- How far an array is from consisting of multiples of 5
 avgDistanceFromMultiplesOf5 :: [Int] -> Float
