@@ -236,7 +236,7 @@ allOptionsProcessedPrinting' it@(i, n, o) (a : as) =
 
 allOptionsProcessedPrinting'' :: Option -> Option -> Bool
 allOptionsProcessedPrinting'' tps1 tps2 =
-  stDevOfOption tps1 > stDevOfOption tps2
+  stDevOfOption tps1 < stDevOfOption tps2
   where
     stDevOfOption =
       avgDistanceFromMultiplesOf5 . map (length . snd) . take 3
