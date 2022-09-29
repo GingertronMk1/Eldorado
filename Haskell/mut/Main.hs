@@ -19,12 +19,13 @@ type TeamPlayer = (Team, [Player])
 type Option = [TeamPlayer]
 
 type IterationCount = Int
+type NumInTeam = Int
 
-type Iteration = (IterationCount, Int, Option)
+type Iteration = (IterationCount, NumInTeam, Option)
 
 data IterationOrNumber
   = Iteration Iteration
-  | Number Int
+  | Number IterationCount
 
 {- THE TEAM DATA -}
 
@@ -215,17 +216,17 @@ allOptionsProcessed =
 
 allOptionsProcessedPrinting :: Lineup -> [IterationOrNumber]
 allOptionsProcessedPrinting =
-  allOptionsProcessedPrinting' 1 1 []
-    . allOptionsProcessed
+  allOptionsProcessedPrinting' (1, 1, [])
+  . allOptionsProcessed
 
-allOptionsProcessedPrinting' :: IterationCount -> Int -> Option -> [Option] -> [IterationOrNumber]
-allOptionsProcessedPrinting' i n o [] = [Iteration (i, n, o)]
-allOptionsProcessedPrinting' i n o (a : as) =
+allOptionsProcessedPrinting' :: Iteration -> [Option] -> [IterationOrNumber]
+allOptionsProcessedPrinting' it [] = [Iteration it]
+allOptionsProcessedPrinting' it@(i, n, o) (a : as) =
   let aLength = sum . map (length . snd) . take 3 $ a
       next = i + 1
-      notLarger = allOptionsProcessedPrinting' next n o as
+      notLarger = allOptionsProcessedPrinting' (next, n, o) as
    in if aLength > n
-        then Iteration (i, aLength, a) : allOptionsProcessedPrinting' next aLength a as
+        then Iteration (i, aLength, a) : allOptionsProcessedPrinting' (next, aLength, a) as
         else
           if mod i (div numOptions 100) == 0
             then Number i : notLarger
