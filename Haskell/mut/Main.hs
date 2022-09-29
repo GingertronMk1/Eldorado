@@ -19,6 +19,7 @@ type TeamPlayer = (Team, [Player])
 type Option = [TeamPlayer]
 
 type IterationCount = Int
+
 type NumInTeam = Int
 
 type Iteration = (IterationCount, NumInTeam, Option)
@@ -217,20 +218,35 @@ allOptionsProcessed =
 allOptionsProcessedPrinting :: Lineup -> [IterationOrNumber]
 allOptionsProcessedPrinting =
   allOptionsProcessedPrinting' (1, 1, [])
-  . allOptionsProcessed
+    . allOptionsProcessed
 
 allOptionsProcessedPrinting' :: Iteration -> [Option] -> [IterationOrNumber]
 allOptionsProcessedPrinting' it [] = [Iteration it]
 allOptionsProcessedPrinting' it@(i, n, o) (a : as) =
-  let aLength = sum . map (length . snd) . take 3 $ a
+  let aLengthVals = map (length . snd) . take 3 $ a
+      aLength = sum aLengthVals
       next = i + 1
       notLarger = allOptionsProcessedPrinting' (next, n, o) as
-   in if aLength > n
+   in if aLength > n || (aLength == n && allOptionsProcessedPrinting'' a o)
         then Iteration (i, aLength, a) : allOptionsProcessedPrinting' (next, aLength, a) as
         else
           if mod i (div numOptions 100) == 0
             then Number i : notLarger
             else notLarger
+
+allOptionsProcessedPrinting'' :: Option -> Option -> Bool
+allOptionsProcessedPrinting'' tps1 tps2 =
+   stDevOfOption tps1 > stDevOfOption tps2
+   where stDevOfOption = avgDistanceFromMultiplesOf5 . map (length . snd) . take 3
+
+-- How far an array is from consisting of multiples of 5
+avgDistanceFromMultiplesOf5 :: [Int] -> Float
+avgDistanceFromMultiplesOf5 ns =
+  (/ fromIntegral (length ns))
+    . fromIntegral
+    . sum
+    . map (\n -> (\v -> min v (5 - v)) $ mod n 5)
+    $ ns
 
 ppIteration :: IterationOrNumber -> String
 ppIteration (Iteration (iterationCount, maxValue, options)) =
@@ -255,7 +271,7 @@ ppIteration (Number n) =
     ++ makeNumberHumanReadable n
     ++ " out of "
     ++ makeNumberHumanReadable numOptions
-    ++ "("
+    ++ " ("
     ++ ( show
            . round
            . (100 *)
