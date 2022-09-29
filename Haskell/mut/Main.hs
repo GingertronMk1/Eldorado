@@ -112,9 +112,9 @@ defense =
     ),
     ( "cb",
       [ ("Stephon Gilmore", ["Colts", "Bills", "Panthers", "Patriots"]),
+        ("Sauce Gardner", ["Jets"]),
         ("Casey Hayward Jr", ["Raiders", "Packers", "Chargers", "Falcons"]),
         ("Sidney Jones IV", ["Seahawks", "Eagles", "Jaguars"]),
-        ("Mike Hilton", ["Bengals", "Steelers"]),
         ("Randy Moss", ["Raiders", "Patriots", "Titans", "Legends", "Vikings", "49ers"])
       ]
     ),
