@@ -350,6 +350,7 @@ showTree = showTree' 0
                                                  ++ showTree' (indent+1) r
 
 limitTree :: Int -> Tree a -> Tree a
+limitTree _ Leaf = Leaf
 limitTree 0 (Node x _ _) = Node x Leaf Leaf
 limitTree n (Node x l r) = Node x (limitTree (n-1) l) (limitTree (n-1) r)
 
@@ -442,15 +443,14 @@ fAdd :: a -> FIFO a -> FIFO a
 fAdd x (fs, rs) = (fs, x:rs)
 
 fDrop :: FIFO a -> FIFO a
-fDrop ([f], rs) = fFix ([], rs)
-fDrop (f:fs, rs) = (fs, rs)
+fDrop (fs, rs) = fFix (drop 1 fs, rs)
 
 fExtract :: FIFO a -> (a, FIFO a)
-fExtract f@([], rs) = fExtract (fFix f)
+fExtract f@([], _) = fExtract (fFix f)
 fExtract (f:fs, rs) = (f, (fs, rs))
 
 fHead :: FIFO a -> a
-fHead (f:_, _) = f
+fHead (f, _) = head f
 
 treeBFSFIFO :: Tree a -> [a]
 treeBFSFIFO
@@ -469,6 +469,7 @@ bstGen n = let n' = 2 ^ n
                                  in Node n (bstGen' h' (n-d) d') (bstGen' h' (n+d) d')
 
 makePairs :: [a] -> [(a,a)]
+makePairs [] = []
 makePairs l@(x:xs) = zip l (xs ++ [x])
 
 data S a = a `Fby` (S a) deriving (Eq, Show)
