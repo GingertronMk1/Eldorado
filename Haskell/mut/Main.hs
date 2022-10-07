@@ -1,144 +1,8 @@
+import Type
+import Data
 import Data.Bifunctor as DB
 import Data.List
 import Data.Ord
-
-type Team = String
-
-type Position = String
-
-type Player = String
-
-type PlayerTeams = (Player, [Team])
-
-type Lineup = [PlayerTeams]
-
-type LiterateLineup = [(Position, Lineup)]
-
-type TeamPlayer = (Team, [Player])
-
-type Option = [TeamPlayer]
-
-type IterationCount = Int
-
-type NumInTeam = Int
-
-type Iteration = (IterationCount, NumInTeam, Option)
-
-data IterationOrNumber
-  = Iteration Iteration
-  | Number IterationCount
-
-{- THE TEAM DATA -}
-
-offense :: LiterateLineup
-offense =
-  [ ( "qb",
-      [ ("Justin Fields", ["Bears"]),
-        ("Tim Tebow", ["Broncos", "Jets", "Legends"])
-      ]
-    ),
-    ( "hb",
-      [ ("Cordarrelle Patterson", ["Bears", "Falcons", "Raiders", "Patriots", "Vikings"]),
-        ("Demarco Murray", ["Cowboys", "Eagles", "Titans", "Legends"]),
-        ("Mark Ingram II", ["Saints", "Ravens", "Texans"])
-      ]
-    ),
-    ( "fb",
-      [ ("Jim Taylor", ["Packers", "Saints", "Legends"]),
-        ("Reggie Gilliam", ["Bills"])
-      ]
-    ),
-    ( "te",
-      [ ("Dave Casper", ["Raiders", "Titans", "Vikings", "Legends"]),
-        ("Evan Engram", ["Giants", "Jaguars"]),
-        ("Dawson Knox", ["Bills"])
-      ]
-    ),
-    ( "wr",
-      [ ("DJ Moore", ["Panthers"]),
-        ("Brandin Cooks", ["Patriots", "Rams", "Saints", "Texans"]),
-        ("Devante Parker", ["Patriots", "Dolphins"]),
-        ("Ceedee Lamb", ["Cowboys"]),
-        ("Gabe Davis", ["Bills"])
-      ]
-    ),
-    ( "lt",
-      [ ("Orlando Brown", ["Chiefs", "Ravens"]),
-        ("Terron Armstead", ["Dolphins", "Saints"])
-      ]
-    ),
-    ( "lg",
-      [ ("Isaac Seumalo", ["Eagles"]),
-        ("Frank Ragnow", ["Lions"])
-      ]
-    ),
-    ( "c",
-      [ ("Tyler Shatley", ["Jaguars"])
-      ]
-    ),
-    ( "rg",
-      [ ("Nate Davis", ["Titans"])
-      ]
-    ),
-    ( "rt",
-      [ ("Lane Johnson", ["Eagles"])
-      ]
-    )
-  ]
-
-defense :: LiterateLineup
-defense =
-  [ ( "mlb",
-      [ ("Isaiah Simmons", ["Cardinals"]),
-        ("Tremaine Edmunds", ["Bills"]),
-        ("Zaven Collins", ["Cardinals"])
-      ]
-    ),
-    ( "rolb",
-      [ ("Divine Deablo", ["Raiders"])
-      ]
-    ),
-    ( "lolb",
-      [ ("Jalen Reeves-Maybin", ["Lions", "Texans"])
-      ]
-    ),
-    ( "ss",
-      [ ("Harrison Smith", ["Vikings"]),
-        ("Grant Delpit", ["Browns"])
-      ]
-    ),
-    ( "fs",
-      [ ("Trevon Moehrig", ["Raiders"]),
-        ("Budda Baker", ["Cardinals"])
-      ]
-    ),
-    ( "cb",
-      [ ("Stephon Gilmore", ["Colts", "Bills", "Panthers", "Patriots"]),
-        ("Sauce Gardner", ["Jets"]),
-        ("Casey Hayward Jr", ["Raiders", "Packers", "Chargers", "Falcons"]),
-        ("Sidney Jones IV", ["Seahawks", "Eagles", "Jaguars"]),
-        ("Randy Moss", ["Raiders", "Patriots", "Titans", "Legends", "Vikings", "49ers"])
-      ]
-    ),
-    ( "dt",
-      [ ("Sam Adams", ["CAPTAIN"]),
-        ("Deforest Buckner", ["49ers", "Colts"]),
-        ("Derrick Brown", ["Panthers"])
-      ]
-    )
-  ]
-
-specialTeams :: LiterateLineup
-specialTeams =
-  [ ( "k",
-      [ ("Justin Reid", ["Texans", "Chiefs"])
-      ]
-    ),
-    ( "p",
-      [ ("Sterling Hofrichter", ["Dolphins"])
-      ]
-    )
-  ]
 
 squad :: Lineup
 squad =
@@ -181,6 +45,55 @@ makeNumberHumanReadable =
       let (first, rest) = splitAt 3 xs
        in first : makeNumberHumanReadable' rest
 
+avgDistanceFromMultiplesOf5 :: [Int] -> Float
+avgDistanceFromMultiplesOf5 ns =
+  (/ fromIntegral (length ns))
+    . fromIntegral
+    . sum
+    . map (\n -> (\v -> min v (5 - v)) $ mod n 5)
+    $ ns
+
+bestCaptainOption :: Option -> Option
+bestCaptainOption = head . bestCaptainOption'
+
+
+bestCaptainOption' :: Option -> [Option]
+bestCaptainOption' o =
+  if captainTeam `elem` map fst o
+    then
+      let captainName = head . snd . head $ filter (\(t, _) -> t == captainTeam) o
+          remaining = filter (\(t, _) -> t /= captainTeam) o
+       in sortBy orderOptions . map (sortOn (Down . length . snd)) . testListFn (second (captainName :)) $ remaining
+    else [o]
+
+testListFn :: (Eq a) => (a -> a) -> [a] -> [[a]]
+testListFn _ [] = []
+testListFn f xs = testListFn' f xs xs
+  where
+    testListFn' _ [] cs = [cs]
+    testListFn' _ _ [] = []
+    testListFn' fn bs (c : cs) =
+      let bs' = filter (/= c) bs
+          newBs = fn c : bs'
+       in (fn c : bs') : testListFn' fn bs cs
+
+orderOptions :: Option -> Option -> Ordering
+orderOptions tps1 tps2 =
+  let lengths = map (length . snd) . take 3
+   in orderOptions' (lengths tps1) (lengths tps2)
+
+orderOptions' :: [Int] -> [Int] -> Ordering
+orderOptions' xs ys =
+  let sumComp = compare (sum xs) (sum ys)
+   in if sumComp /= EQ
+        then sumComp
+        else compare (avgDistanceFromMultiplesOf5 ys) (avgDistanceFromMultiplesOf5 xs)
+
+reasonableModNumbers :: Int -> Int
+reasonableModNumbers = (\x -> 10 ^ (x - 2)) . length . show
+
+{- END HELPER FUNCTIONS -}
+
 {- ACTUAL CALCULATIONS -}
 
 numOptions :: Int
@@ -201,9 +114,6 @@ longestTeamName = maximumBy (comparing length) allTeams
 longestTeamNameLength :: Int
 longestTeamNameLength = length longestTeamName
 
-allOptions :: Lineup -> [[(Player, Team)]]
-allOptions t = map (zip (map fst t)) . mapM snd $ t
-
 allOptionsProcessed :: Lineup -> [Option]
 allOptionsProcessed =
   map
@@ -222,51 +132,30 @@ allOptionsProcessedPrinting =
 
 allOptionsProcessedPrinting' :: Iteration -> [Option] -> [IterationOrNumber]
 allOptionsProcessedPrinting' it [] = [Iteration it]
+allOptionsProcessedPrinting' it@(i, n, []) (a : as) =
+  let bca = bestCaptainOption a
+      bcaLength = sum . map (length . snd) . take 3 $ a
+   in Iteration (i, bcaLength, bca) : allOptionsProcessedPrinting' (i + 1, bcaLength, bca) as
 allOptionsProcessedPrinting' it@(i, n, o) (a : as) =
-  let aLengthVals = map (length . snd) . take 3 $ a
-      aLength = sum aLengthVals
+  let bca = bestCaptainOption a
+      bcaLength = sum . map (length . snd) . take 3 $ bca
       next = i + 1
       notLarger = allOptionsProcessedPrinting' (next, n, o) as
-   in if aLength > n || (aLength == n && allOptionsProcessedPrinting'' a o)
-        then Iteration (i, aLength, a) : allOptionsProcessedPrinting' (next, aLength, a) as
+   in if orderOptions o bca == GT
+        then Iteration (i, bcaLength, bca) : allOptionsProcessedPrinting' (next, bcaLength, bca) as
         else
-          if mod i (div numOptions 100) == 0
+          if mod i (reasonableModNumbers numOptions) == 0
             then Number i : notLarger
             else notLarger
 
-allOptionsProcessedPrinting'' :: Option -> Option -> Bool
-allOptionsProcessedPrinting'' tps1 tps2 =
-  stDevOfOption tps1 < stDevOfOption tps2
-  where
-    stDevOfOption =
-      avgDistanceFromMultiplesOf5 . map (length . snd) . take 3
-
 -- How far an array is from consisting of multiples of 5
-avgDistanceFromMultiplesOf5 :: [Int] -> Float
-avgDistanceFromMultiplesOf5 ns =
-  (/ fromIntegral (length ns))
-    . fromIntegral
-    . sum
-    . map (\n -> (\v -> min v (5 - v)) $ mod n 5)
-    $ ns
 
 ppIteration :: IterationOrNumber -> String
 ppIteration (Iteration (iterationCount, maxValue, options)) =
   "Iteration "
     ++ makeNumberHumanReadable iterationCount
     ++ "\n"
-    ++ ( intercalate "\n"
-           . map
-             ( \(team, players) ->
-                 "    "
-                   ++ padRight longestTeamNameLength ' ' team
-                   ++ " | "
-                   ++ (show . length) players
-                   ++ " | "
-                   ++ intercalate ", " players
-             )
-       )
-      options
+    ++ ppOption options
 ppIteration (Number n) =
   "Iteration"
     ++ " "
@@ -283,10 +172,34 @@ ppIteration (Number n) =
       numOptions
     ++ "%)"
 
+ppOption :: Option -> String
+ppOption =
+  intercalate "\n"
+    . map
+      ( \(team, players) ->
+          "    "
+            ++ padRight longestTeamNameLength ' ' team
+            ++ " | "
+            ++ (show . length) players
+            ++ " | "
+            ++ intercalate ", " players
+      )
+
+ppOptions :: [Option] -> String
+ppOptions = intercalate "\n\n" . map ppOption
+
+foldOptionsFn :: Option -> Option -> Option
+foldOptionsFn [] o = bestCaptainOption o
+foldOptionsFn o1 o2 =
+  let bco2 = bestCaptainOption o2
+   in if orderOptions o1 bco2 == GT
+      then o1
+      else bco2
+
 main :: IO ()
 main =
   putStrLn
-    . intercalate "\n\n"
-    . map ppIteration
-    . allOptionsProcessedPrinting
+    . ppOption
+    . foldl' foldOptionsFn []
+    . allOptionsProcessed
     $ team
