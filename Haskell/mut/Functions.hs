@@ -1,6 +1,7 @@
 module Functions where
 
-import Type, Data
+import Data
+import Type
 
 numberOfEachTeam' :: Lineup -> [(Team, Int)]
 numberOfEachTeam' =
@@ -40,7 +41,6 @@ avgDistanceFromMultiplesOf5 ns =
 bestCaptainOption :: Option -> Option
 bestCaptainOption = head . bestCaptainOption'
 
-
 bestCaptainOption' :: Option -> [Option]
 bestCaptainOption' o =
   if captainTeam `elem` map fst o
@@ -75,4 +75,3 @@ orderOptions' xs ys =
 
 reasonableModNumbers :: Int -> Int
 reasonableModNumbers = (\x -> 10 ^ (x - 2)) . length . show
-
