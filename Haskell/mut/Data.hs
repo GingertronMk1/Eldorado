@@ -17,49 +17,45 @@ offense =
     ),
     ( "hb",
       [ ("Cordarrelle Patterson", ["Bears", "Falcons", "Raiders", "Patriots", "Vikings"]),
-        ("Demarco Murray", ["Cowboys", "Eagles", "Titans", "Legends"]),
-        ("Mark Ingram II", ["Saints", "Ravens", "Texans"])
+        ("Demarco Murray", ["Cowboys", "Eagles", "Titans", "Legends"])
       ]
     ),
     ( "fb",
-      [ ("Jim Taylor", ["Packers", "Saints", "Legends"]),
-        ("Reggie Gilliam", ["Bills"])
+      [ ("Jim Taylor", ["Packers", "Saints", "Legends"])
       ]
     ),
     ( "te",
       [ ("Dave Casper", ["Raiders", "Titans", "Vikings", "Legends"]),
-        ("Evan Engram", ["Giants", "Jaguars"]),
-        ("Dawson Knox", ["Bills"])
+        ("Evan Engram", ["Giants", "Jaguars"])
       ]
     ),
     ( "wr",
-      [ ("DJ Moore", ["Panthers"]),
+      [
+        ("Larry Fitzgerald", ["Cardinals", "Legends"]),
+        ("Michael Crabtree", ["49ers", "Ravens", "Cardinals", "Raiders", "Legends"]),
+        ("DJ Moore", ["Panthers"]),
         ("Brandin Cooks", ["Patriots", "Rams", "Saints", "Texans"]),
-        ("Devante Parker", ["Patriots", "Dolphins"]),
-        ("Ceedee Lamb", ["Cowboys"]),
-        ("Gabe Davis", ["Bills"])
+        ("Ceedee Lamb", ["Cowboys"])
       ]
     ),
     ( "lt",
-      [ ("Orlando Brown", ["Chiefs", "Ravens"]),
-        ("Terron Armstead", ["Dolphins", "Saints"])
+      [ ("Orlando Brown", ["Chiefs", "Ravens"])
       ]
     ),
     ( "lg",
-      [ ("Isaac Seumalo", ["Eagles"])
+      [ ("Andrew Norwell", ["Commanders", "Jaguars", "Panthers"])
       ]
     ),
     ( "c",
-      [ ("Frank Ragnow", ["Lions"]),
-        ("Tyler Shatley", ["Jaguars"])
+      [ ("Frank Ragnow", ["Lions"])
       ]
     ),
     ( "rg",
-      [ ("Nate Davis", ["Titans"])
+      [ ("Mark Glowinski", ["Giants", "Colts", "Seahawks"])
       ]
     ),
     ( "rt",
-      [ ("Lane Johnson", ["Eagles"])
+      [ ("La'el Collins", ["Cowboys", "Bengals"])
       ]
     )
   ]
@@ -67,17 +63,16 @@ offense =
 defense :: LiterateLineup
 defense =
   [ ( "mlb",
-      [ ("Isaiah Simmons", ["Cardinals"]),
-        ("Tremaine Edmunds", ["Bills"]),
-        ("Zaven Collins", ["Cardinals"])
+      [ ("Kiko Alonso", ["Legends", "Bills", "Dolphins", "Eagles", "Saints"]),
+        ("Tremaine Edmunds", ["Bills"])
       ]
     ),
     ( "rolb",
-      [ ("Divine Deablo", ["Raiders"])
+      [ ("Jonathan Casillas", ["Legends", "Buccaneers", "Giants", "Patriots", "Saints"])
       ]
     ),
     ( "lolb",
-      [ ("Jalen Reeves-Maybin", ["Lions", "Texans"])
+      [ ("Ted Hendricks", ["Colts", "Packers", "Raiders", "Legends"])
       ]
     ),
     ( "ss",
@@ -87,21 +82,19 @@ defense =
     ),
     ( "fs",
       [ ("Trevon Moehrig", ["Raiders"]),
-        ("Budda Baker", ["Cardinals"])
+        ("Marcus Williams", ["Saints", "Ravens"])
       ]
     ),
     ( "cb",
       [ ("Stephon Gilmore", ["Colts", "Bills", "Panthers", "Patriots"]),
         ("Sauce Gardner", ["Jets"]),
         ("Casey Hayward Jr", ["Raiders", "Packers", "Chargers", "Falcons"]),
-        ("Sidney Jones IV", ["Seahawks", "Eagles", "Jaguars"]),
-        ("Randy Moss", ["Raiders", "Patriots", "Titans", "Legends", "Vikings", "49ers"])
+        ("Sidney Jones IV", ["Seahawks", "Eagles", "Jaguars"])
       ]
     ),
     ( "dt",
       [ ("Sam Adams", captainTeams),
-        ("Deforest Buckner", ["49ers", "Colts"]),
-        ("Derrick Brown", ["Panthers"])
+        ("Deforest Buckner", ["49ers", "Colts"])
       ]
     )
   ]
@@ -109,7 +102,7 @@ defense =
 specialTeams :: LiterateLineup
 specialTeams =
   [ ( "k",
-      [ ("Justin Reid", ["Texans", "Chiefs"])
+      [ ("Zane Gonzalez", ["Browns", "Cardinals", "Panthers"])
       ]
     ),
     ( "p",

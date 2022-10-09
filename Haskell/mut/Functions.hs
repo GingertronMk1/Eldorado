@@ -1,12 +1,16 @@
 module Functions where
 
 import Data
+import Data.Bifunctor as DB
+import Data.List
+import Data.Ord
 import Type
+import Control.Arrow
 
 numberOfEachTeam' :: Lineup -> [(Team, Int)]
 numberOfEachTeam' =
   sortOn (Down . snd)
-    . map (\arr -> (head arr, length arr))
+    . map (head Control.Arrow.&&& length)
     . group
     . sort
     . concatMap snd
@@ -27,19 +31,22 @@ makeNumberHumanReadable =
   where
     makeNumberHumanReadable' [] = []
     makeNumberHumanReadable' xs =
-      let (first, rest) = splitAt 3 xs
-       in first : makeNumberHumanReadable' rest
+      let (firstNum, restNums) = splitAt 3 xs
+       in firstNum : makeNumberHumanReadable' restNums
 
 avgDistanceFromMultiplesOf5 :: [Int] -> Float
 avgDistanceFromMultiplesOf5 ns =
   (/ fromIntegral (length ns))
     . fromIntegral
     . sum
-    . map (\n -> (\v -> min v (5 - v)) $ mod n 5)
+    . map distanceFrom5
     $ ns
 
+distanceFrom5 :: Int -> Int
+distanceFrom5 n = (\v -> min v (5 - v)) $ mod n 5
+
 bestCaptainOption :: Option -> Option
-bestCaptainOption = head . bestCaptainOption'
+bestCaptainOption = last . bestCaptainOption'
 
 bestCaptainOption' :: Option -> [Option]
 bestCaptainOption' o =
@@ -47,7 +54,7 @@ bestCaptainOption' o =
     then
       let captainName = head . snd . head $ filter (\(t, _) -> t == captainTeam) o
           remaining = filter (\(t, _) -> t /= captainTeam) o
-       in sortBy orderOptions . map (sortOn (Down . length . snd)) . testListFn (second (captainName :)) $ remaining
+       in sortBy orderOptions . map (sortOn (Down . length . snd)) . testListFn (DB.second (captainName :)) $ remaining
     else [o]
 
 testListFn :: (Eq a) => (a -> a) -> [a] -> [[a]]
@@ -59,19 +66,57 @@ testListFn f xs = testListFn' f xs xs
     testListFn' fn bs (c : cs) =
       let bs' = filter (/= c) bs
           newBs = fn c : bs'
-       in (fn c : bs') : testListFn' fn bs cs
+       in (fn c : bs') : testListFn' fn newBs cs
 
 orderOptions :: Option -> Option -> Ordering
 orderOptions tps1 tps2 =
   let lengths = map (length . snd) . take 3
-   in orderOptions' (lengths tps1) (lengths tps2)
+   in fst $ orderOptions' (lengths tps1) (lengths tps2)
 
-orderOptions' :: [Int] -> [Int] -> Ordering
+orderOptions' :: [Int] -> [Int] -> (Ordering, String)
 orderOptions' xs ys =
   let sumComp = compare (sum xs) (sum ys)
+      distComp = compare (avgDistanceFromMultiplesOf5 ys) (avgDistanceFromMultiplesOf5 xs)
+      num5s = length . filter (== 0) . map (`mod` 5)
+      numComp = compare (num5s xs) (num5s ys)
    in if sumComp /= EQ
-        then sumComp
-        else compare (avgDistanceFromMultiplesOf5 ys) (avgDistanceFromMultiplesOf5 xs)
+        then (sumComp, "Sum")
+        else
+          if numComp /= EQ
+            then (numComp, "5s")
+            else (distComp, "Dist")
 
 reasonableModNumbers :: Int -> Int
 reasonableModNumbers = (\x -> 10 ^ (x - 2)) . length . show
+
+playerTeamToOption :: [(Player, Team)] -> Option
+playerTeamToOption =
+  bestCaptainOption
+  . sortOn (Down . length . snd)
+    . map
+      ( (\(ps, t : _) -> (t, ps))
+          . unzip
+      )
+    . groupBy (\(_, t1) (_, t2) -> t1 == t2)
+    . sortOn snd
+
+ppOption :: Option -> String
+ppOption o =
+  let longestTeamNameLength = length . maximumBy (comparing length) . map fst $ o
+   in intercalate "\n"
+        . map
+          ( \(team, players) ->
+              "    "
+                ++ padRight longestTeamNameLength ' ' team
+                ++ " | "
+                ++ (show . length) players
+                ++ " | "
+                ++ intercalate ", " players
+          )
+        $ o
+
+ppOptions :: [Option] -> String
+ppOptions = intercalate "\n\n" . map ppOption
+
+putPPOptions :: [Option] -> IO ()
+putPPOptions = putStrLn . ppOptions
