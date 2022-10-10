@@ -45,28 +45,34 @@ avgDistanceFromMultiplesOf5 ns =
 distanceFrom5 :: Int -> Int
 distanceFrom5 n = (\v -> min v (5 - v)) $ mod n 5
 
+-- TODO: Improve this so it works recursively
 bestCaptainOption :: Option -> Option
-bestCaptainOption = last . bestCaptainOption'
+bestCaptainOption o =
+  if captainTeam `elem` map fst o
+    then bestCaptainOption . last . bestCaptainOption' $ o
+    else sortOn (Down . length . snd) o
 
 bestCaptainOption' :: Option -> [Option]
 bestCaptainOption' o =
-  if captainTeam `elem` map fst o
-    then
-      let captainName = head . snd . head $ filter (\(t, _) -> t == captainTeam) o
-          remaining = filter (\(t, _) -> t /= captainTeam) o
-       in sortBy orderOptions . map (sortOn (Down . length . snd)) . testListFn (DB.second (captainName :)) $ remaining
-    else [o]
+    let captainName = head . snd . head $ filter (\(t, _) -> t == captainTeam) o
+        remaining = filter (\(t, _) -> t /= captainTeam) o
+        remainingCaptains = head . filter (\(t,_) -> t == captainTeam) $ o
+        bitToReturn = testListFn (DB.second (captainName :)) remaining
+      in if null $ snd remainingCaptains
+          then sortBy orderOptions bitToReturn
+          else sortBy orderOptions . map (remainingCaptains:) $ bitToReturn
 
-testListFn :: (Eq a) => (a -> a) -> [a] -> [[a]]
+testListFn :: Eq a => (a -> a) -> [a] -> [[a]]
 testListFn _ [] = []
 testListFn f xs = testListFn' f xs xs
-  where
-    testListFn' _ [] cs = [cs]
-    testListFn' _ _ [] = []
-    testListFn' fn bs (c : cs) =
-      let bs' = filter (/= c) bs
-          newBs = fn c : bs'
-       in (fn c : bs') : testListFn' fn newBs cs
+
+testListFn' :: Eq a => (a -> a) -> [a] -> [a] -> [[a]]
+testListFn' _ [] cs = [cs]
+testListFn' _ _ [] = []
+testListFn' fn bs (c : cs) =
+  let bs' = filter (/= c) bs
+      newBs = fn c : bs'
+    in (fn c : bs') : testListFn' fn newBs cs
 
 orderOptions :: Option -> Option -> Ordering
 orderOptions tps1 tps2 =
