@@ -1,11 +1,11 @@
 module Functions where
 
+import Control.Arrow
 import Data
 import Data.Bifunctor as DB
 import Data.List
 import Data.Ord
 import Type
-import Control.Arrow
 
 numberOfEachTeam' :: Lineup -> [(Team, Int)]
 numberOfEachTeam' =
@@ -45,39 +45,34 @@ avgDistanceFromMultiplesOf5 ns =
 distanceFrom5 :: Int -> Int
 distanceFrom5 n = (\v -> min v (5 - v)) $ mod n 5
 
--- TODO: Improve this so it works recursively
 bestCaptainOption :: Option -> Option
-bestCaptainOption o =
-  if captainTeam `elem` map fst o
-    then bestCaptainOption . last . bestCaptainOption' $ o
-    else sortOn (Down . length . snd) o
+bestCaptainOption = last . bestCaptainOption'
 
 bestCaptainOption' :: Option -> [Option]
 bestCaptainOption' o =
-    let captainName = head . snd . head $ filter (\(t, _) -> t == captainTeam) o
-        remaining = filter (\(t, _) -> t /= captainTeam) o
-        remainingCaptains = head . filter (\(t,_) -> t == captainTeam) $ o
-        bitToReturn = testListFn (DB.second (captainName :)) remaining
-      in if null $ snd remainingCaptains
-          then sortBy orderOptions bitToReturn
-          else sortBy orderOptions . map (remainingCaptains:) $ bitToReturn
+  if captainTeam `elem` map fst o
+    then
+      let captainName = head . snd . head $ filter (\(t, _) -> t == captainTeam) o
+          remaining = filter (\(t, _) -> t /= captainTeam) o
+       in sortBy orderOptions . map (sortOn (Down . length . snd)) . testListFn (DB.second (captainName :)) $ remaining
+    else [o]
 
-testListFn :: Eq a => (a -> a) -> [a] -> [[a]]
+testListFn :: (Eq a) => (a -> a) -> [a] -> [[a]]
 testListFn _ [] = []
 testListFn f xs = testListFn' f xs xs
+  where
+    testListFn' _ [] cs = [cs]
+    testListFn' _ _ [] = []
+    testListFn' fn bs (c : cs) =
+      let bs' = filter (/= c) bs
+          newBs = fn c : bs'
+       in (fn c : bs') : testListFn' fn bs cs
 
-testListFn' :: Eq a => (a -> a) -> [a] -> [a] -> [[a]]
-testListFn' _ [] cs = [cs]
-testListFn' _ _ [] = []
-testListFn' fn bs (c : cs) =
-  let bs' = filter (/= c) bs
-      newBs = fn c : bs'
-    in (fn c : bs') : testListFn' fn newBs cs
-
+-- Returns whether tps2 should be higher up the list than tps1
 orderOptions :: Option -> Option -> Ordering
-orderOptions tps1 tps2 =
+orderOptions o1 o2 =
   let lengths = map (length . snd) . take 3
-   in fst $ orderOptions' (lengths tps1) (lengths tps2)
+   in fst $ orderOptions' (lengths o1) (lengths o2)
 
 orderOptions' :: [Int] -> [Int] -> (Ordering, String)
 orderOptions' xs ys =
@@ -98,7 +93,7 @@ reasonableModNumbers = (\x -> 10 ^ (x - 2)) . length . show
 playerTeamToOption :: [(Player, Team)] -> Option
 playerTeamToOption =
   bestCaptainOption
-  . sortOn (Down . length . snd)
+    . sortOn (Down . length . snd)
     . map
       ( (\(ps, t : _) -> (t, ps))
           . unzip

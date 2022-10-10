@@ -10,13 +10,25 @@ import Data.List
 
 squad :: Lineup
 squad =
-  concatMap
+  popularitySort
+  $ concatMap
     (concatMap snd)
     [ offense,
       defense,
       specialTeams
     ]
 
+popularitySort :: Lineup -> Lineup
+popularitySort l = map (DB.second (sortBy (flip (popSort'3 l)))) l
+
+popSort'1 :: Lineup -> [Team]
+popSort'1 = concatMap snd
+
+popSort'2 :: Team -> Lineup -> Int
+popSort'2 t = length . filter (==t) . popSort'1
+
+popSort'3 :: Lineup -> Team -> Team -> Ordering
+popSort'3 l t1 t2 = compare (popSort'2 t1 l) (popSort'2 t2 l)
 
 numberOfEachTeam :: [(Team, Int)]
 numberOfEachTeam = numberOfEachTeam' squad

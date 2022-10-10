@@ -1,10 +1,22 @@
+import Type
 import Functions
 import CalculatedData
+
+foldFunction :: [Option] -> [Option]
+foldFunction [] = []
+foldFunction os = foldFunction' os []
+
+foldFunction' :: [Option] -> Option -> [Option]
+foldFunction' [] _ = []
+foldFunction' (o:os) biggestO =
+  if orderOptions o biggestO == GT
+    then o:foldFunction' os o
+    else foldFunction' os biggestO
 
 main :: IO ()
 main =
   putStrLn
-  . ppOption
-  . foldl (\o1 o2 -> if orderOptions o1 o2 == LT then o2 else o1) []
+  . ppOptions
+  . foldFunction
   . map playerTeamToOption
   $ allPTs

@@ -34,8 +34,7 @@ offense =
         ("Larry Fitzgerald", ["Cardinals", "Legends"]),
         ("Michael Crabtree", ["49ers", "Ravens", "Cardinals", "Raiders", "Legends"]),
         ("DJ Moore", ["Panthers"]),
-        ("Brandin Cooks", ["Patriots", "Rams", "Saints", "Texans"]),
-        ("Ceedee Lamb", ["Cowboys"])
+        ("Brandin Cooks", ["Patriots", "Rams", "Saints", "Texans"])
       ]
     ),
     ( "lt",
@@ -106,7 +105,7 @@ specialTeams =
       ]
     ),
     ( "p",
-      [ ("Sterling Hofrichter", ["Dolphins"])
+      [ ("Johnny Hekker", ["Rams", "Panthers"])
       ]
     )
   ]
