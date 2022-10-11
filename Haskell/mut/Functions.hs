@@ -74,17 +74,14 @@ orderOptions o1 o2 =
    in fst $ orderOptions' (lengths o1) (lengths o2)
 
 orderOptions' :: [Int] -> [Int] -> (Ordering, String)
-orderOptions' xs ys =
-  let sumComp = compare (sum xs) (sum ys)
-      distComp = compare (avgDistanceFromMultiplesOf5 ys) (avgDistanceFromMultiplesOf5 xs)
-      num5s = length . filter (== 0) . map (`mod` 5)
-      numComp = compare (num5s xs) (num5s ys)
-   in if sumComp /= EQ
-        then (sumComp, "Sum")
-        else
-          if numComp /= EQ
-            then (numComp, "5s")
-            else (distComp, "Dist")
+orderOptions' xs ys
+  | sumComp /= EQ -> (sumComp, "Sum")
+  | numComp /= EQ -> (numComp, "5s")
+  | otherwise     -> (distComp, "Dist")
+  where sumComp = compare (sum xs) (sum ys)
+        num5s = length . filter (== 0) . map (`mod` 5)
+        numComp = compare (num5s xs) (num5s ys)
+        distComp = compare (avgDistanceFromMultiplesOf5 ys) (avgDistanceFromMultiplesOf5 xs)
 
 reasonableModNumbers :: Int -> Int
 reasonableModNumbers = (\x -> 10 ^ (x - 2)) . length . show
