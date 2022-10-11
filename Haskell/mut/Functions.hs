@@ -75,9 +75,9 @@ orderOptions o1 o2 =
 
 orderOptions' :: [Int] -> [Int] -> (Ordering, String)
 orderOptions' xs ys
-  | sumComp /= EQ -> (sumComp, "Sum")
-  | numComp /= EQ -> (numComp, "5s")
-  | otherwise     -> (distComp, "Dist")
+  | sumComp /= EQ = (sumComp, "Sum")
+  | numComp /= EQ = (numComp, "5s")
+  | otherwise     = (distComp, "Dist")
   where sumComp = compare (sum xs) (sum ys)
         num5s = length . filter (== 0) . map (`mod` 5)
         numComp = compare (num5s xs) (num5s ys)
