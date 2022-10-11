@@ -65,8 +65,7 @@ testListFn f xs = testListFn' f xs xs
     testListFn' _ _ [] = []
     testListFn' fn bs (c : cs) =
       let bs' = filter (/= c) bs
-          newBs = fn c : bs'
-       in (fn c : bs') : testListFn' fn bs cs
+       in (fn c : bs') : testListFn' fn bs' cs
 
 -- Returns whether tps2 should be higher up the list than tps1
 orderOptions :: Option -> Option -> Ordering
@@ -104,15 +103,28 @@ playerTeamToOption =
 ppOption :: Option -> String
 ppOption o =
   let longestTeamNameLength = length . maximumBy (comparing length) . map fst $ o
+      largestNumber = length . show . maximum . map (length . snd) $ o
+      indent = replicate 2 ' '
    in intercalate "\n"
         . map
-          ( \(team, players) ->
-              "    "
+          ( \(team, p@(player : players)) ->
+              indent
                 ++ padRight longestTeamNameLength ' ' team
                 ++ " | "
-                ++ (show . length) players
+                ++ padRight largestNumber ' ' ((show . length) p)
                 ++ " | "
-                ++ intercalate ", " players
+                ++ player
+                ++ concatMap
+                  ( \player' ->
+                      "\n"
+                        ++ indent
+                        ++ replicate longestTeamNameLength ' '
+                        ++ " | "
+                        ++ replicate largestNumber ' '
+                        ++ " | "
+                        ++ player'
+                  )
+                  players
           )
         $ o
 
