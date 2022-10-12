@@ -35,12 +35,7 @@ makeNumberHumanReadable =
        in firstNum : makeNumberHumanReadable' restNums
 
 avgDistanceFromMultiplesOf5 :: [Int] -> Float
-avgDistanceFromMultiplesOf5 ns =
-  (/ fromIntegral (length ns))
-    . fromIntegral
-    . sum
-    . map distanceFrom5
-    $ ns
+avgDistanceFromMultiplesOf5 = mean . map distanceFrom5
 
 distanceFrom5 :: Int -> Int
 distanceFrom5 n = (\v -> min v (5 - v)) $ mod n 5
@@ -54,18 +49,21 @@ bestCaptainOption' o =
     then
       let captainName = head . snd . head $ filter (\(t, _) -> t == captainTeam) o
           remaining = filter (\(t, _) -> t /= captainTeam) o
-       in sortBy orderOptions . map (sortOn (Down . length . snd)) . testListFn (DB.second (captainName :)) $ remaining
+       in sortBy orderOptions . map (sortOn (Down . length . snd)) . iterativeApplicationFn (DB.second (captainName :)) $ remaining
     else [o]
 
-testListFn :: (Eq a) => (a -> a) -> [a] -> [[a]]
-testListFn _ [] = []
-testListFn f xs = testListFn' f xs xs
-  where
-    testListFn' _ [] cs = [cs]
-    testListFn' _ _ [] = []
-    testListFn' fn bs (c : cs) =
-      let bs' = filter (/= c) bs
-       in (fn c : bs') : testListFn' fn bs' cs
+-- Apply a function to each item in a list, returning a list of lists containing
+-- the result of each application
+iterativeApplicationFn :: (Eq a) => (a -> a) -> [a] -> [[a]]
+iterativeApplicationFn _ [] = []
+iterativeApplicationFn f xs = iterativeApplicationFn' f xs xs
+
+iterativeApplicationFn' :: Eq a => (a -> a) -> [a] -> [a] -> [[a]]
+iterativeApplicationFn' _ [] cs = [cs]
+iterativeApplicationFn' _ _ [] = []
+iterativeApplicationFn' fn bs (c : cs) =
+  let bs' = filter (/= c) bs
+   in (fn c : bs') : iterativeApplicationFn' fn bs' cs
 
 -- Returns whether tps2 should be higher up the list than tps1
 orderOptions :: Option -> Option -> Ordering
@@ -77,11 +75,12 @@ orderOptions' :: [Int] -> [Int] -> (Ordering, String)
 orderOptions' xs ys
   | sumComp /= EQ = (sumComp, "Sum")
   | numComp /= EQ = (numComp, "5s")
-  | otherwise     = (distComp, "Dist")
-  where sumComp = compare (sum xs) (sum ys)
-        num5s = length . filter (== 0) . map (`mod` 5)
-        numComp = compare (num5s xs) (num5s ys)
-        distComp = compare (avgDistanceFromMultiplesOf5 ys) (avgDistanceFromMultiplesOf5 xs)
+  | otherwise = (distComp, "Dist")
+  where
+    sumComp = compare (sum xs) (sum ys)
+    num5s = length . filter (== 0) . map (`mod` 5)
+    numComp = compare (num5s xs) (num5s ys)
+    distComp = compare (avgDistanceFromMultiplesOf5 ys) (avgDistanceFromMultiplesOf5 xs)
 
 reasonableModNumbers :: Int -> Int
 reasonableModNumbers = (\x -> 10 ^ (x - 2)) . length . show
@@ -130,3 +129,49 @@ ppOptions = intercalate "\n\n" . map ppOption
 
 putPPOptions :: [Option] -> IO ()
 putPPOptions = putStrLn . ppOptions
+
+popularitySort :: Lineup -> Lineup
+popularitySort l = map (DB.second $ sortBy $ popSort' l) l
+
+popSort' :: Lineup -> Team -> Team -> Ordering
+popSort' l t1 t2 = compare (popSort'' t2 l) (popSort'' t1 l)
+
+popSort'' :: Team -> Lineup -> Int
+popSort'' t = length . filter (== t) . concatMap snd
+
+numOptionsFn :: Lineup -> Int
+numOptionsFn = product . map (length . snd)
+
+
+
+allTeamsFn :: Lineup -> [Team]
+allTeamsFn = rmDups . concatMap snd
+
+popFilter :: Lineup -> Lineup
+popFilter l =
+  let allTeams = concatMap snd l
+      numOfOneTeam t = length . filter (t==) $ allTeams
+      filterTeamList = filter (\t -> numOfOneTeam t > 4 || t == captainTeam)
+   in filter (not . null . snd) . map (DB.second filterTeamList) $ l
+
+lineupToPlayerTeams :: Lineup -> [[(Player, Team)]]
+lineupToPlayerTeams = mapM (\(p, ts) -> [(p, t) | t <- ts])
+
+foldFunction :: [Option] -> [Option]
+foldFunction [] = []
+foldFunction os = foldFunction' os []
+
+foldFunction' :: [Option] -> Option -> [Option]
+foldFunction' [] _ = []
+foldFunction' (o : os) biggestO =
+  if orderOptions o biggestO == GT
+    then o : foldFunction' os o
+    else foldFunction' os biggestO
+
+mean :: (Integral a) => [a] -> Float
+mean ls = fromIntegral (length ls) / fromIntegral (sum ls)
+
+allUsefulOptions :: Lineup -> [Option]
+allUsefulOptions =
+  map playerTeamToOption
+  . lineupToPlayerTeams
