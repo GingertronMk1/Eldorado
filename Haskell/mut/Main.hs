@@ -6,7 +6,7 @@ main =
   putStrLn
   . ppOptions
   . foldFunction
-  . allUsefulOptions
-  . popFilter
-  $ squad
+  . map playerTeamToOption
+  . lineupToPlayerTeams
+  $ popSquad
 

@@ -142,8 +142,6 @@ popSort'' t = length . filter (== t) . concatMap snd
 numOptionsFn :: Lineup -> Int
 numOptionsFn = product . map (length . snd)
 
-
-
 allTeamsFn :: Lineup -> [Team]
 allTeamsFn = rmDups . concatMap snd
 
@@ -171,7 +169,10 @@ foldFunction' (o : os) biggestO =
 mean :: (Integral a) => [a] -> Float
 mean ls = fromIntegral (length ls) / fromIntegral (sum ls)
 
-allUsefulOptions :: Lineup -> [Option]
-allUsefulOptions =
-  map playerTeamToOption
-  . lineupToPlayerTeams
+{- Useful for debugging/testing -}
+
+ppSquad :: Lineup -> IO()
+ppSquad = 
+  putStrLn
+  . intercalate "\n"
+  . map (\(p, ts) -> p ++ ": " ++ intercalate ", " ts)
