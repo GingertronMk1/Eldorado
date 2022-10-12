@@ -1,13 +1,15 @@
+{-|
+Module: Data
+-}
 module Data where
 
 import Type
 
+-- | A useful shorthand for any player who can have all 32 teams
 captainTeam :: Team
 captainTeam = "CAPTAIN"
 
-captainTeams :: [Team]
-captainTeams = [captainTeam]
-
+-- | The offensive players
 offense :: LiterateLineup
 offense =
   [ ( "qb",
@@ -59,6 +61,7 @@ offense =
     )
   ]
 
+-- | The defensive players
 defense :: LiterateLineup
 defense =
   [ ( "mlb",
@@ -92,12 +95,13 @@ defense =
       ]
     ),
     ( "dt",
-      [ ("Sam Adams", captainTeams),
+      [ ("Sam Adams", [captainTeam]),
         ("Deforest Buckner", ["49ers", "Colts"])
       ]
     )
   ]
 
+-- | The kicker and punter
 specialTeams :: LiterateLineup
 specialTeams =
   [ ( "k",
