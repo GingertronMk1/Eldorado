@@ -10,6 +10,7 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\HttpClient\Exception\ClientException;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -17,9 +18,47 @@ use Symfony\Component\Console\SingleCommandApplication;
 use Symfony\Component\Console\Command\Command;
 
 const BASEURL = 'https://www.mut.gg';
-function nicePrint(array $arr): void
+
+function wrapStringArray(array $strings, string $subSeparator = ', ', int $maxWidth = 80): string
 {
-  echo json_encode($arr, JSON_PRETTY_PRINT) . PHP_EOL;
+  $return = [];
+
+  $strCount = count($strings);
+
+  for($offset = 0; $offset < $strCount; ) {
+      $newVal = null;
+    for ($length = 1; $length < $strCount; $length++) {
+      $modifier = 0;
+      $thisOne = implode(
+        $subSeparator,
+        array_slice($strings, $offset, $length)
+      );
+      $previousOne = implode(
+        $subSeparator,
+        array_slice($strings, $offset, $length - 1)
+      );
+      $thisLength = strlen($thisOne);
+      $previousLength = strlen($previousOne);
+      if ($thisLength > $maxWidth && $previousLength <= $maxWidth) {
+        $newVal = $previousOne;
+        $modifier = -1;
+      } else if ($length + $offset >= $strCount || $thisLength <= $previousLength) {
+        $newVal = $thisOne;
+      }
+      if ($newVal !== null) {
+        $return[] = $newVal;
+        $offset += ($length + $modifier);
+        break;
+      }
+    }
+  }
+
+  // This is fuckin orrible eh
+  $retCount = count(array_merge(...array_map(fn (string $str) => explode($subSeparator, $str), $return)));
+  // if ($retCount !== $strCount) {
+  //   throw new Exception("Mismatched array length - input is {$strCount}, output is {$retCount}");
+  // }
+  return implode(PHP_EOL, $return);
 }
 
 function getFromUrl(string $url, string $method = 'GET'): string
@@ -48,8 +87,7 @@ function getAllPrograms(): array
 {
   $defs = getBaseData('programs');
   $return = [];
-  foreach($defs as $def)
-  {
+  foreach ($defs as $def) {
     $return[$def['id']] = $def['name'];
   }
   ksort($return);
@@ -95,39 +133,78 @@ function getPlayerNamesFromPage(string $url): array
 function getAllPlayersForTeamsForProgram(string $programName): Generator
 {
   $programId = getProgramId($programName);
-  foreach(getChemistryDefsForTeams() as $chemistryDef) {
-    $query = http_build_query([
-      'program_id' => $programId,
-      'market' => 2,
-      'team_chem' => $chemistryDef['displaySlug']
-    ]);
-    $playerNames = getPlayerNamesFromPage(BASEURL . '/players/?' . $query);
-    sort($playerNames);
+  $chemistryDefs = getChemistryDefsForTeams();
+  foreach ($chemistryDefs as $chemistryDef) {
+    $playerNames = [];
+    $break = false;
+    $i = 1;
+    while (!$break) {
+      $query = http_build_query([
+        'program_id' => $programId,
+        'market' => 2,
+        'team_chem' => $chemistryDef['displaySlug'],
+        'page' => $i
+      ]);
+      try {
+        $newPlayers = getPlayerNamesFromPage(BASEURL . '/players/?' . $query);
+        if (empty($newPlayers)) {
+          $break = true;
+          continue;
+        }
+        $playerNames = array_merge($playerNames, $newPlayers);
+        sort($playerNames);
+        $i++;
+      } catch (ClientException $e) {
+        $break = true;
+      }
+    }
     yield $chemistryDef['name'] => $playerNames;
   }
 }
 
 (new SingleCommandApplication())
-    ->setCode(function (InputInterface $input, OutputInterface $output): int {
-      $helper = new QuestionHelper();
-      $question = new Question('Please select what program you want: ');
-      $question->setAutocompleterValues(getAllPrograms());
-      $programName = $helper->ask($input, $output, $question);
-        $section = $output->section();
-        $table = new Table($section);
-        $allPlayersInTeams = getAllPlayersForTeamsForProgram($programName); 
-        $table
-          ->setHeaders(['Team Name', 'Players'])
-          ->render();
-        $addSeparator = false;
-        foreach($allPlayersInTeams as $team => $players) {
-          if ($addSeparator) {
-            $table->appendRow(new TableSeparator());
-          } else {
-            $addSeparator = !$addSeparator;
-          }
-          $table->appendRow([$team, implode(', ', $players)]);
-        }
-        return Command::SUCCESS;
-    })
-    ->run();
+  ->setCode(function (InputInterface $input, OutputInterface $output): int {
+    $helper = new QuestionHelper();
+    $allPrograms = array_filter(getAllPrograms());
+    sort($allPrograms);
+    $question = new Question(
+      implode(
+        "",
+        array_map(
+          fn (string $str) => $str . PHP_EOL,
+          [
+            'Please select what program you want from the following list:',
+            implode(
+              PHP_EOL,
+              array_map(
+                fn (string $str) => "  - {$str}",
+                $allPrograms
+              )
+            )
+          ]
+        )
+      )
+    );
+    $question->setAutocompleterValues($allPrograms);
+    // $programName = $helper->ask($input, $output, $question);
+    $programName = 'Weekly Wildcards';
+    $allPlayersInTeams = getAllPlayersForTeamsForProgram($programName);
+    $section = $output->section();
+    $table = new Table($section);
+    $table
+      ->setHeaders(['Team Name', 'Players'])
+      ->render()
+    ;
+    $addSeparator = false;
+    foreach ($allPlayersInTeams as $team => $players) {
+      if ($addSeparator) {
+        $table->appendRow(new TableSeparator());
+      } else {
+        $addSeparator = !$addSeparator;
+      }
+      $numPlayers = count($players);
+      $table->appendRow(["{$team} ({$numPlayers})", wrapStringArray($players)]);
+    }
+    return Command::SUCCESS;
+  })
+  ->run();
