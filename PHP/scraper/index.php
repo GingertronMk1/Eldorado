@@ -3,6 +3,8 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
+use Exception;
+use Generator;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -14,6 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\SingleCommandApplication;
 use Symfony\Component\Console\Command\Command;
 
+const BASEURL = 'https://www.mut.gg';
 function nicePrint(array $arr): void
 {
   echo json_encode($arr, JSON_PRETTY_PRINT) . PHP_EOL;
@@ -32,14 +35,18 @@ function getFromUrl(string $url, string $method = 'GET'): string
 }
 
 
-function getBaseData(): array
+function getBaseData(?string $index = null): array
 {
-  return json_decode(getFromUrl('https://www.mut.gg/api/23/core-data/'), true)['data'];
+  $data = json_decode(getFromUrl(BASEURL . '/api/23/core-data/'), true)['data'];
+  if ($index !== null) {
+    return $data[$index];
+  }
+  return $data;
 }
 
 function getAllPrograms(): array
 {
-  $defs = getBaseData()['programs'];
+  $defs = getBaseData('programs');
   $return = [];
   foreach($defs as $def)
   {
@@ -51,7 +58,7 @@ function getAllPrograms(): array
 
 function getChemistryDefsForTeams(): array
 {
-  $defs = getBaseData()['chemistryDefs'];
+  $defs = getBaseData('chemistryDefs');
   $defs = array_filter(
     $defs,
     fn (array $def) => $def['chemistryType'] === 1
@@ -62,14 +69,14 @@ function getChemistryDefsForTeams(): array
 
 function getProgramId(string $programName): int
 {
-  $defs = getBaseData()['programs'];
+  $defs = getBaseData('programs');
   $defs = array_filter(
     $defs,
     fn (array $def) => $def['name'] === $programName
   );
   $result = array_shift($defs);
   if ($result === null) {
-    throw new \Exception('No program found with that name');
+    throw new Exception('No program found with that name');
   }
   return $result['id'];
 }
@@ -89,7 +96,12 @@ function getAllPlayersForTeamsForProgram(string $programName): Generator
 {
   $programId = getProgramId($programName);
   foreach(getChemistryDefsForTeams() as $chemistryDef) {
-    $playerNames = getPlayerNamesFromPage("https://www.mut.gg/players/?program_id={$programId}&market=2&team_chem={$chemistryDef['displaySlug']}");
+    $query = http_build_query([
+      'program_id' => $programId,
+      'market' => 2,
+      'team_chem' => $chemistryDef['displaySlug']
+    ]);
+    $playerNames = getPlayerNamesFromPage(BASEURL . '/players/?' . $query);
     sort($playerNames);
     yield $chemistryDef['name'] => $playerNames;
   }
