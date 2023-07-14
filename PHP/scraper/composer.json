@@ -1,0 +1,16 @@
+{
+    "name": "jackellis/scraper",
+    "require": {
+        "php": "^8.2",
+        "symfony/http-client": "^6.3",
+        "symfony/dom-crawler": "^6.3",
+        "symfony/css-selector": "^6.3",
+        "symfony/console": "^6.3"
+    },
+    "authors": [
+        {
+            "name": "Jack Ellis",
+            "email": "jackellis1504@gmail.com"
+        }
+    ]
+}

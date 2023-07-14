@@ -64,7 +64,7 @@ generateToNumber :: Int -> [(PointsPurchase, Int)]
 generateToNumber n = filter ((==n) . snd) $ generate n
 
 ppGenNumber :: Int -> String
-ppGenNumber = intercalate "\n---\n" . map (ppPointsPurchase . fst) . generateToNumber
+ppGenNumber = intercalate "\n---\n" . map (ppPointsPurchase . fst) . reverse . generateToNumber
 
 main :: IO ()
 main = do

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<head>
+  <title>MUT.GG Scraper</title>
+</head>
+<html>
+<body>
+  <pre id="core-data"></pre>
+  <script lang="js">
+    const cloudflareURL = "https://basic-bundle-small-hall-220a.jackellis1504-cloudflare.workers.dev";
+    const mutGGUrl = "https://mut.gg";
+    const mutGGApiUrl = "https://mut.gg/api"
+
+    const params = { url: mutGGUrl }
+    const coreData = fetch(`${cloudflareURL}?${new URLSearchParams(params).toString()}`);
+    document.querySelector('pre#core-data').innerHTML = JSON.stringify(coreData);
+    const otherData = fetch(mutGGUrl);
+  </script>
+</body>
+</html>
