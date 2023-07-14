@@ -1,5 +1,5 @@
 {
-    "name": "jackellis/scraper",
+    "name": "jackellis/mutgg-scraper",
     "require": {
         "php": "^8.2",
         "symfony/http-client": "^6.3",
