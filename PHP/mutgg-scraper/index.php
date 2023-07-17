@@ -26,28 +26,29 @@ function wrapStringArray(array $strings, string $subSeparator = ', ', int $maxWi
   $strCount = count($strings);
 
   for($offset = 0; $offset < $strCount; ) {
+    for ($length = 1; $length < $strCount + 1;) {
       $newVal = null;
-    for ($length = 1; $length < $strCount; $length++) {
-      $modifier = 0;
+      echo "offset: {$offset} | length: {$length} | strCount: {$strCount}\n";
       $thisOne = implode(
         $subSeparator,
-        array_slice($strings, $offset, $length)
+        array_slice($strings, $offset, $length + 1)
       );
       $previousOne = implode(
         $subSeparator,
-        array_slice($strings, $offset, $length - 1)
+        array_slice($strings, $offset, $length)
       );
       $thisLength = strlen($thisOne);
       $previousLength = strlen($previousOne);
-      if ($thisLength > $maxWidth && $previousLength <= $maxWidth) {
+      if (
+        ($thisLength > $maxWidth && $previousLength <= $maxWidth) ||
+        $length + $offset + 1 >= $strCount ||
+        $thisLength === $previousLength
+      ) {
         $newVal = $previousOne;
-        $modifier = -1;
-      } else if ($length + $offset >= $strCount || $thisLength <= $previousLength) {
-        $newVal = $thisOne;
       }
       if ($newVal !== null) {
         $return[] = $newVal;
-        $offset += ($length + $modifier);
+        $offset += $length ;
         break;
       }
     }
@@ -55,9 +56,9 @@ function wrapStringArray(array $strings, string $subSeparator = ', ', int $maxWi
 
   // This is fuckin orrible eh
   $retCount = count(array_merge(...array_map(fn (string $str) => explode($subSeparator, $str), $return)));
-  // if ($retCount !== $strCount) {
-  //   throw new Exception("Mismatched array length - input is {$strCount}, output is {$retCount}");
-  // }
+  if ($retCount !== $strCount) {
+    throw new Exception("Mismatched array length - input is {$strCount}, output is {$retCount}");
+  }
   return implode(PHP_EOL, $return);
 }
 
@@ -186,8 +187,7 @@ function getAllPlayersForTeamsForProgram(string $programName): Generator
       )
     );
     $question->setAutocompleterValues($allPrograms);
-    // $programName = $helper->ask($input, $output, $question);
-    $programName = 'Weekly Wildcards';
+    $programName = $helper->ask($input, $output, $question);
     $allPlayersInTeams = getAllPlayersForTeamsForProgram($programName);
     $section = $output->section();
     $table = new Table($section);
