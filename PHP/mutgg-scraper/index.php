@@ -10,14 +10,35 @@ use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\SingleCommandApplication;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpClient\Exception\ClientException;
 use Symfony\Component\HttpClient\HttpClient;
 
 const BASEURL = 'https://www.mut.gg';
+
+final class MutGGApiData
+{
+    /** @param array<int, mixed> $abilities
+     *  @param array<int, mixed> $programs
+     *  @param array<int, mixed> $teams
+     *  @param array<int, mixed> $stats
+     *  @param array<int, mixed> $featuredRatings
+     *  @param array<int, mixed> $chemistryDefs
+     */
+    public function __construct(
+        public readonly array $abilities = [],
+        public readonly array $programs = [],
+        public readonly array $teams = [],
+        public readonly array $stats = [],
+        public readonly array $featuredRatings = [],
+        public readonly array $chemistryDefs = [],
+    ) {
+    }
+}
 
 function getFromUrl(string $url, string $method = 'GET'): string
 {
@@ -32,53 +53,84 @@ function getFromUrl(string $url, string $method = 'GET'): string
 }
 
 
+function getBaseData(): MutGGApiData
+{
+    /** @var array<string, array<string, array<int, string>>> $baseData */
+    $baseData = json_decode(getFromUrl(BASEURL . '/api/23/core-data/'), true);
+
+    if (! isset($baseData['data'])) {
+        throw new Exception('No data');
+    }
+
+    $data = $baseData['data'];
+
+    return new MutGGApiData(
+        $data['abilities'],
+        $data['programs'],
+        $data['teams'],
+        $data['stats'],
+        $data['featuredRatings'],
+        $data['chemistryDefs'],
+    );
+}
+
 /**
  * @return array<string, string>
  */
-function getBaseData(string $index): array
-{
-    /** @var array<string, array<string, string>> $baseData */
-    $baseData = json_decode(getFromUrl(BASEURL . '/api/23/core-data/'), true);
-    $data = $baseData['data'];
-    return $data[$index];
-}
-
 function getAllPrograms(): array
 {
-    $defs = getBaseData('programs');
+    $defs = getBaseData()->programs;
     $return = [];
     foreach ($defs as $def) {
+        /** @var array<string, string> $def */
         $return[$def['id']] = $def['name'];
     }
     ksort($return);
     return $return;
 }
 
+/**
+ * @return  array<int, mixed>
+ */
 function getChemistryDefsForTeams(): array
 {
-    $defs = getBaseData('chemistryDefs');
+    $defs = getBaseData()->chemistryDefs;
+
+    /** @var callable $filterFn */
+    $filterFn = fn (array $def) => $def['chemistryType'] === 1;
+
     $defs = array_filter(
         $defs,
-        fn (array $def) => $def['chemistryType'] === 1
+        $filterFn
     );
-    usort($defs, fn (array $def1, array $def2) => $def1['sortOrder'] - $def2['sortOrder']);
+    /** @var callable $sortFn */
+    $sortFn = fn (array $def1, array $def2) => intval($def1['sortOrder'] - $def2['sortOrder']);
+    usort($defs, $sortFn);
     return $defs;
 }
 
 function getProgramId(string $programName): int
 {
-    $defs = getBaseData('programs');
+    $defs = getBaseData()->programs;
+
+    /** @var callable $filterFn */
+    $filterFn = fn (array $def) => $def['name'] === $programName;
+
     $defs = array_filter(
         $defs,
-        fn (array $def) => $def['name'] === $programName
+        $filterFn
     );
+    /** @var null|false|array<string, int|string> $result */
     $result = end($defs);
-    if ($result === null) {
+    if (! $result) {
         throw new Exception('No program found with that name');
     }
-    return $result['id'];
+    return intval($result['id']);
 }
 
+/**
+ * @return array<string>
+ */
 function getPlayerNamesFromPage(string $url): array
 {
     $pageContent = getFromUrl($url);
@@ -90,11 +142,15 @@ function getPlayerNamesFromPage(string $url): array
     return $crawler;
 }
 
+/**
+ * @return Generator<string, array<int, string>>
+ */
 function getAllPlayersForTeamsForProgram(string $programName): Generator
 {
     $programId = getProgramId($programName);
     $chemistryDefs = getChemistryDefsForTeams();
     foreach ($chemistryDefs as $chemistryDef) {
+        /** @var array<string, string> $chemistryDef */
         $playerNames = [];
         $break = false;
         $i = 1;
@@ -123,7 +179,8 @@ function getAllPlayersForTeamsForProgram(string $programName): Generator
 }
 
 (new SingleCommandApplication())
-    ->setCode(function (InputInterface $input, OutputInterface $output): int {
+    ->setCode(function (InputInterface $input, ConsoleOutputInterface $output): int {
+        $io = new SymfonyStyle($input, $output);
         $helper = new QuestionHelper();
         $allPrograms = array_filter(getAllPrograms());
         sort($allPrograms);
@@ -146,6 +203,7 @@ function getAllPlayersForTeamsForProgram(string $programName): Generator
             )
         );
         $question->setAutocompleterValues($allPrograms);
+        /** @var string $programName */
         $programName = $helper->ask($input, $output, $question);
         $allPlayersInTeams = getAllPlayersForTeamsForProgram($programName);
         $section = $output->section();
@@ -158,7 +216,7 @@ function getAllPlayersForTeamsForProgram(string $programName): Generator
             if ($addSeparator) {
                 $table->appendRow(new TableSeparator());
             } else {
-                $addSeparator = ! $addSeparator;
+                $addSeparator = true;
             }
             $numPlayers = count($players);
             $table->appendRow(["{$team} ({$numPlayers})", wordwrap(implode(', ', $players))]);
