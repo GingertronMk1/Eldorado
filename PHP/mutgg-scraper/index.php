@@ -19,49 +19,6 @@ use Symfony\Component\Console\Command\Command;
 
 const BASEURL = 'https://www.mut.gg';
 
-function wrapStringArray(array $strings, string $subSeparator = ', ', int $maxWidth = 80): string
-{
-  $return = [];
-
-  $strCount = count($strings);
-
-  for($offset = 0; $offset < $strCount; ) {
-    for ($length = 1; $length < $strCount + 1;) {
-      $newVal = null;
-      echo "offset: {$offset} | length: {$length} | strCount: {$strCount}\n";
-      $thisOne = implode(
-        $subSeparator,
-        array_slice($strings, $offset, $length + 1)
-      );
-      $previousOne = implode(
-        $subSeparator,
-        array_slice($strings, $offset, $length)
-      );
-      $thisLength = strlen($thisOne);
-      $previousLength = strlen($previousOne);
-      if (
-        ($thisLength > $maxWidth && $previousLength <= $maxWidth) ||
-        $length + $offset + 1 >= $strCount ||
-        $thisLength === $previousLength
-      ) {
-        $newVal = $previousOne;
-      }
-      if ($newVal !== null) {
-        $return[] = $newVal;
-        $offset += $length ;
-        break;
-      }
-    }
-  }
-
-  // This is fuckin orrible eh
-  $retCount = count(array_merge(...array_map(fn (string $str) => explode($subSeparator, $str), $return)));
-  if ($retCount !== $strCount) {
-    throw new Exception("Mismatched array length - input is {$strCount}, output is {$retCount}");
-  }
-  return implode(PHP_EOL, $return);
-}
-
 function getFromUrl(string $url, string $method = 'GET'): string
 {
   $client = HttpClient::create();
@@ -113,7 +70,7 @@ function getProgramId(string $programName): int
     $defs,
     fn (array $def) => $def['name'] === $programName
   );
-  $result = array_shift($defs);
+  $result = end($defs);
   if ($result === null) {
     throw new Exception('No program found with that name');
   }
@@ -203,7 +160,7 @@ function getAllPlayersForTeamsForProgram(string $programName): Generator
         $addSeparator = !$addSeparator;
       }
       $numPlayers = count($players);
-      $table->appendRow(["{$team} ({$numPlayers})", wrapStringArray($players)]);
+      $table->appendRow(["{$team} ({$numPlayers})", wordwrap(implode(', ', $players))]);
     }
     return Command::SUCCESS;
   })
