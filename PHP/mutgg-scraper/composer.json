@@ -12,5 +12,14 @@
             "name": "Jack Ellis",
             "email": "jackellis1504@gmail.com"
         }
-    ]
+    ],
+    "require-dev": {
+        "symplify/easy-coding-standard": "^11",
+        "phpstan/phpstan": "^1.10"
+    },
+    "scripts": {
+      "check": "vendor/bin/ecs",
+      "fix": "@check --fix",
+      "stan": "vendor/bin/phpstan analyse index.php"
+    }
 }
