@@ -52,6 +52,11 @@ function getFromUrl(string $url, string $method = 'GET'): string
     return $content;
 }
 
+function getPageAsCrawler(string $url): Crawler
+{
+    $pageContent = getFromUrl($url);
+    return new Crawler($pageContent);
+}
 
 function getBaseData(): MutGGApiData
 {
@@ -128,18 +133,40 @@ function getProgramId(string $programName): int
     return intval($result['id']);
 }
 
+function getPlayerDataFromLink(string $str): array
+{
+  $playerLinkExploded = array_filter(explode('/', $str));
+  $playerId = end($playerLinkExploded);
+  return getPlayerDataFromApi($playerId);
+}
+
+function getPlayerDataFromApi(string $str): array
+{
+  $jsonData = getFromUrl(BASEURL . "/api/mutdb/player-items/{$str}");
+  $decodedData = json_decode($jsonData, true);
+  return $decodedData['data'];
+}
+
 /**
  * @return array<string>
  */
-function getPlayerNamesFromPage(string $url): array
+function getPlayerNamesFromPage(string $url): Generator
 {
-    $pageContent = getFromUrl($url);
-    $crawler = new Crawler($pageContent);
+    $crawler = getPageAsCrawler($url);
     $crawler = $crawler
-        ->filter('.player-list-item__name')
-        ->each(fn (Crawler $node) => $node->text());
+        ->filter('.player-list-item__link')
+        ->each(fn (Crawler $node) => $node->attr('href'));
 
-    return $crawler;
+    foreach($crawler as $link) {
+          $playerData = getPlayerDataFromLink($link);
+          yield implode(' ', [
+            $playerData['overall'],
+            'OVR',
+            $playerData['position']['abbreviation'],
+            $playerData['firstName'],
+            $playerData['lastName']
+          ]);
+        }
 }
 
 /**
@@ -167,13 +194,15 @@ function getAllPlayersForTeamsForProgram(string $programName): Generator
                     $break = true;
                     continue;
                 }
-                $playerNames = array_merge($playerNames, $newPlayers);
-                sort($playerNames);
+                foreach($newPlayers as $newPlayer) {
+                  $playerNames[] = $newPlayer;
+                }
                 $i++;
             } catch (ClientException $e) {
                 $break = true;
             }
         }
+        sort($playerNames);
         yield $chemistryDef['name'] => $playerNames;
     }
 }
