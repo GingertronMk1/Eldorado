@@ -3,8 +3,6 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use Exception;
-use Generator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Helper\Table;
@@ -12,7 +10,6 @@ use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
-use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\SingleCommandApplication;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpClient\Exception\ClientException;
@@ -46,14 +43,15 @@ final class MutGGPlayer
         public readonly int $ovr,
         public readonly string $firstName,
         public readonly string $lastName,
-        public readonly string $position,
+        public readonly string $positionName,
+        public readonly string $positionAbbreviation,
         public readonly string $teamName
     ) {
     }
 
     public function __toString(): string
     {
-        return "{$this->ovr}OVR {$this->firstName} {$this->lastName}";
+        return "{$this->ovr}OVR {$this->positionAbbreviation} {$this->firstName} {$this->lastName}";
     }
 }
 
@@ -181,6 +179,7 @@ function getPlayerNamesFromPage(string $url): Generator
             $playerData['firstName'],
             $playerData['lastName'],
             $playerData['position']['name'],
+            $playerData['position']['abbreviation'],
             $playerData['team']['name']
         );
     }
@@ -229,8 +228,6 @@ function getAllPlayersForProgram(string $programName): Generator
         /** @var string $programName */
         $programName = $programHelper->ask($input, $output, $programQuestion);
 
-        $groupAttribute = 'teamName';
-
         $playerClassVars = get_class_vars(MutGGPlayer::class);
         $playerAttributes = array_keys($playerClassVars);
 
@@ -263,12 +260,12 @@ function getAllPlayersForProgram(string $programName): Generator
         $table->setHeaders(['Position', 'Players']);
         uasort(
             $allPlayersArray,
-            fn (array $arr1, array $arr2) => count($arr1) - count($arr2)
+            fn (array $arr1, array $arr2) => count($arr2) - count($arr1)
         );
         $tableRows = [];
-        foreach ($allPlayersArray as $position => $players) {
+        foreach ($allPlayersArray as $grouping => $players) {
             $tableRows[] = [
-              count($players) . ' ' . $position,
+              count($players) . ' ' . $grouping,
                 wordwrap(implode(', ', $players), 120),
             ];
             $tableRows[] = new TableSeparator();
