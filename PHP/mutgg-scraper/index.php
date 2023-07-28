@@ -11,9 +11,9 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\SingleCommandApplication;
-use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpClient\Exception\ClientException;
 use Symfony\Component\HttpClient\HttpClient;
@@ -37,6 +37,23 @@ final class MutGGApiData
         public readonly array $featuredRatings = [],
         public readonly array $chemistryDefs = [],
     ) {
+    }
+}
+
+final class MutGGPlayer
+{
+    public function __construct(
+        public readonly int $ovr,
+        public readonly string $firstName,
+        public readonly string $lastName,
+        public readonly string $position,
+        public readonly string $teamName
+    ) {
+    }
+
+    public function __toString(): string
+    {
+        return "{$this->ovr}OVR {$this->firstName} {$this->lastName}";
     }
 }
 
@@ -135,20 +152,20 @@ function getProgramId(string $programName): int
 
 function getPlayerDataFromLink(string $str): array
 {
-  $playerLinkExploded = array_filter(explode('/', $str));
-  $playerId = end($playerLinkExploded);
-  return getPlayerDataFromApi($playerId);
+    $playerLinkExploded = array_filter(explode('/', $str));
+    $playerId = end($playerLinkExploded);
+    return getPlayerDataFromApi($playerId);
 }
 
 function getPlayerDataFromApi(string $str): array
 {
-  $jsonData = getFromUrl(BASEURL . "/api/mutdb/player-items/{$str}");
-  $decodedData = json_decode($jsonData, true);
-  return $decodedData['data'];
+    $jsonData = getFromUrl(BASEURL . "/api/mutdb/player-items/{$str}");
+    $decodedData = json_decode($jsonData, true);
+    return $decodedData['data'];
 }
 
 /**
- * @return array<string>
+ * @return Generator<MutGGPlayer>
  */
 function getPlayerNamesFromPage(string $url): Generator
 {
@@ -157,99 +174,109 @@ function getPlayerNamesFromPage(string $url): Generator
         ->filter('.player-list-item__link')
         ->each(fn (Crawler $node) => $node->attr('href'));
 
-    foreach($crawler as $link) {
-          $playerData = getPlayerDataFromLink($link);
-          yield implode(' ', [
+    foreach ($crawler as $link) {
+        $playerData = getPlayerDataFromLink($link);
+        yield new MutGGPlayer(
             $playerData['overall'],
-            'OVR',
-            $playerData['position']['abbreviation'],
             $playerData['firstName'],
-            $playerData['lastName']
-          ]);
-        }
+            $playerData['lastName'],
+            $playerData['position']['name'],
+            $playerData['team']['name']
+        );
+    }
 }
 
 /**
- * @return Generator<string, array<int, string>>
+ * @return Generator<MutGGPlayer>
  */
-function getAllPlayersForTeamsForProgram(string $programName): Generator
+function getAllPlayersForProgram(string $programName): Generator
 {
     $programId = getProgramId($programName);
-    $chemistryDefs = getChemistryDefsForTeams();
-    foreach ($chemistryDefs as $chemistryDef) {
-        /** @var array<string, string> $chemistryDef */
-        $playerNames = [];
-        $break = false;
-        $i = 1;
-        while (! $break) {
-            $query = http_build_query([
-                'program_id' => $programId,
-                'market' => 2,
-                'team_chem' => $chemistryDef['displaySlug'],
-                'page' => $i,
-            ]);
-            try {
-                $newPlayers = getPlayerNamesFromPage(BASEURL . '/players/?' . $query);
-                if (empty($newPlayers)) {
-                    $break = true;
-                    continue;
-                }
-                foreach($newPlayers as $newPlayer) {
-                  $playerNames[] = $newPlayer;
-                }
-                $i++;
-            } catch (ClientException $e) {
+    /** @var array<string, string> $chemistryDef */
+    $break = false;
+    $i = 1;
+    while (! $break) {
+        $query = http_build_query([
+            'program_id' => $programId,
+            'market' => 2,
+            'page' => $i,
+        ]);
+        try {
+            $newPlayers = getPlayerNamesFromPage(BASEURL . '/players/?' . $query);
+            if (empty($newPlayers)) {
                 $break = true;
+                continue;
             }
+            foreach ($newPlayers as $newPlayer) {
+                yield $newPlayer;
+            }
+            $i++;
+        } catch (ClientException $e) {
+            break;
         }
-        sort($playerNames);
-        yield $chemistryDef['name'] => $playerNames;
     }
 }
 
 (new SingleCommandApplication())
     ->setCode(function (InputInterface $input, ConsoleOutputInterface $output): int {
-        $io = new SymfonyStyle($input, $output);
-        $helper = new QuestionHelper();
+        $programHelper = new QuestionHelper();
         $allPrograms = array_filter(getAllPrograms());
-        sort($allPrograms);
-        $question = new Question(
-            implode(
-                "",
-                array_map(
-                    fn (string $str) => $str . PHP_EOL,
-                    [
-                        'Please select what program you want from the following list:',
-                        implode(
-                            PHP_EOL,
-                            array_map(
-                                fn (string $str) => "  - {$str}",
-                                $allPrograms
-                            )
-                        ),
-                    ]
-                )
-            )
+        asort($allPrograms);
+        $programQuestion = new ChoiceQuestion(
+          'What program do you want?',
+          $allPrograms
         );
-        $question->setAutocompleterValues($allPrograms);
         /** @var string $programName */
-        $programName = $helper->ask($input, $output, $question);
-        $allPlayersInTeams = getAllPlayersForTeamsForProgram($programName);
+        $programName = $programHelper->ask($input, $output, $programQuestion);
+
+        $groupAttribute = 'teamName';
+
+        $playerClassVars = get_class_vars(MutGGPlayer::class);
+        $playerAttributes = array_keys($playerClassVars);
+
+        $groupHelper = new QuestionHelper();
+        $groupQuestion = new ChoiceQuestion(
+          'What player attribute would you like to group by?',
+          $playerAttributes
+        );
+        $groupAttribute = $groupHelper->ask($input, $output, $groupQuestion);
+
+        if (!in_array($groupAttribute, $playerAttributes)) {
+          throw new Exception();
+        };
+
+        $output->write(sprintf("\033\143"));
+        $allPlayers = getAllPlayersForProgram($programName);
         $section = $output->section();
-        $table = new Table($section);
-        $table
-            ->setHeaders(['Team Name', 'Players'])
-            ->render();
-        $addSeparator = false;
-        foreach ($allPlayersInTeams as $team => $players) {
-            if ($addSeparator) {
-                $table->appendRow(new TableSeparator());
+        $allPlayersArray = [];
+        $playersProcessed = 0;
+        foreach ($allPlayers as $player) {
+            if (isset($allPlayersArray[$player->$groupAttribute])) {
+                $allPlayersArray[$player->$groupAttribute][] = $player;
             } else {
-                $addSeparator = true;
+                $allPlayersArray[$player->$groupAttribute] = [$player];
             }
-            $numPlayers = count($players);
-            $table->appendRow(["{$team} ({$numPlayers})", wordwrap(implode(', ', $players))]);
+            $playersProcessed++;
+            $section->overwrite("Processed {$playersProcessed} players - currently on {$player}");
         }
+        $table = new Table($section);
+        $table->setHeaders(['Position', 'Players']);
+        uasort(
+            $allPlayersArray,
+            fn (array $arr1, array $arr2) => count($arr1) - count($arr2)
+        );
+        $tableRows = [];
+        foreach ($allPlayersArray as $position => $players) {
+            $tableRows[] = [
+              count($players) . ' ' . $position,
+                wordwrap(implode(', ', $players), 120),
+            ];
+            $tableRows[] = new TableSeparator();
+        }
+        array_pop($tableRows);
+        $table->setRows($tableRows);
+        $section->clear();
+        $table->render();
         return Command::SUCCESS;
     })
     ->run();
