@@ -1,0 +1,13 @@
+{
+    "name": "jackellis/symfony-console",
+    "require": {
+        "php": "^8.2",
+        "symfony/console": "^6.3"
+    },
+    "authors": [
+        {
+            "name": "Jack Ellis",
+            "email": "jackellis1504@gmail.com"
+        }
+    ]
+}
